@@ -1,0 +1,122 @@
+[
+  {
+    "query": "Why isn't my PR merging? It's been green for half an hour.",
+    "should_trigger": true,
+    "expected": "driving-prs-to-merge",
+    "note": "Green-but-not-merging — the classic stuck-PR symptom, usually unresolved review threads."
+  },
+  {
+    "query": "CI is red on #482. Figure out what actually failed and fix it.",
+    "should_trigger": true,
+    "expected": "driving-prs-to-merge",
+    "note": "CI failure triage from per-job logs on an open PR."
+  },
+  {
+    "query": "The merge queue looks broken — three PRs just got booted at once.",
+    "should_trigger": true,
+    "expected": "driving-prs-to-merge",
+    "note": "Merge-queue operation; a bad title booting a whole merge group is a known case here."
+  },
+  {
+    "query": "PR #503 is showing DIRTY. Get it un-stuck and back on the merge path.",
+    "should_trigger": true,
+    "expected": "driving-prs-to-merge",
+    "note": "DIRTY/conflicted-PR rescue ladder + re-arming auto-merge."
+  },
+  {
+    "query": "The bot left review comments on my PR and now it won't auto-merge. Handle them.",
+    "should_trigger": true,
+    "expected": "driving-prs-to-merge",
+    "note": "Resolving bot review threads; required_review_thread_resolution gates merge."
+  },
+  {
+    "query": "Auto-merge mysteriously dropped on a bunch of CLEAN PRs after I admin-merged one.",
+    "should_trigger": true,
+    "expected": "driving-prs-to-merge",
+    "note": "Silently-dropped auto-merge; re-arm after ejection is core here."
+  },
+  {
+    "query": "This check has failed twice on the same SHA but passes on every sibling PR — flake or real?",
+    "should_trigger": true,
+    "expected": "driving-prs-to-merge",
+    "note": "Transient-vs-real CI classification via flake ledger / same-SHA rule."
+  },
+  {
+    "query": "There's a pre-existing red test on dev that my branch didn't cause — what do I owe here?",
+    "should_trigger": true,
+    "expected": "driving-prs-to-merge",
+    "note": "Finder-owns-it pre-existing red CI with coordination probes — explicitly in scope."
+  },
+  {
+    "query": "PR is BLOCKED with zero queue activity — is the queue dead?",
+    "should_trigger": true,
+    "expected": "driving-prs-to-merge",
+    "note": "Reading mergeStateStatus correctly; BLOCKED-no-activity is almost always unresolved threads."
+  },
+  {
+    "query": "Need a fresh-context peer review on #460 before it lands — risky auth change.",
+    "should_trigger": true,
+    "expected": "driving-prs-to-merge",
+    "note": "Dispatching selective cold peer review is owned by this skill."
+  },
+  {
+    "query": "Fill all 8 slots and keep agents going until the backlog is empty.",
+    "should_trigger": false,
+    "expected": "orchestrating-slots",
+    "note": "N-slot fill loop is orchestrating-slots, even though it ends in PRs that need driving."
+  },
+  {
+    "query": "Spawn an agent to implement #321 and open the PR.",
+    "should_trigger": false,
+    "expected": "dispatching-subagents",
+    "note": "Opening the PR (pre-merge) is dispatching-subagents; driving starts after gh pr create."
+  },
+  {
+    "query": "Work the queue and babysit the merge pipeline for the next hour.",
+    "should_trigger": false,
+    "expected": "orchestrating-slots",
+    "note": "\"Work the queue\" + monitor pipeline across many PRs is the loop, not one PR's lifecycle."
+  },
+  {
+    "query": "An agent stalled mid-task and returned status:failed before pushing — salvage or re-dispatch?",
+    "should_trigger": false,
+    "expected": "dispatching-subagents",
+    "note": "Stalled-agent worktree salvage is a dispatch concern; no open PR yet to drive."
+  },
+  {
+    "query": "Set do-not-rebase on the PR so the auto-rebase bot stops starving it.",
+    "should_trigger": false,
+    "expected": "gh-issue-labels",
+    "note": "The label semantics live in the control-field skill; driving only references applying it. Borderline — accept either."
+  },
+  {
+    "query": "The PR merged but the linked issue is still open — close it and release the lock.",
+    "should_trigger": false,
+    "expected": "gh-issue-locking",
+    "note": "Release/close-on-merge protocol is gh-issue-locking, even though driving triggers the sweep."
+  },
+  {
+    "query": "File a tracking issue for the test we're skipping so the coverage hole doesn't go permanent.",
+    "should_trigger": false,
+    "expected": "gh-issue-filing",
+    "note": "Filing the issue itself is gh-issue-filing; driving only mandates that one exists before .skip()."
+  },
+  {
+    "query": "Recon #275 and estimate the level of effort before any code is written.",
+    "should_trigger": false,
+    "expected": "technical-recon",
+    "note": "Pre-implementation sizing — no PR exists yet, so nothing to drive to merge."
+  },
+  {
+    "query": "Map out the conventions in this legacy service so I understand how it's wired.",
+    "should_trigger": false,
+    "expected": "spelunking-specs",
+    "note": "Deep-dive codebase recon to living specs — unrelated to PR lifecycle."
+  },
+  {
+    "query": "The espresso machine in the office keeps throwing an E03 error — any idea what that means?",
+    "should_trigger": false,
+    "expected": "none",
+    "note": "Truly unrelated: a hardware error code, nothing to do with PRs or CI."
+  }
+]

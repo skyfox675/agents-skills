@@ -1,0 +1,122 @@
+[
+  {
+    "query": "Orchestrate the repo: keep 8 agents going and react to merges as they land.",
+    "should_trigger": true,
+    "expected": "orchestrating-slots",
+    "note": "Explicit orchestrate + keep N agents going + event reaction = the slot loop."
+  },
+  {
+    "query": "Fill your slots and work the queue P0-first.",
+    "should_trigger": true,
+    "expected": "orchestrating-slots",
+    "note": "\"Fill your slots\" / \"work the queue\" are named trigger phrases."
+  },
+  {
+    "query": "Run a few rounds over the backlog and keep the merge pipeline moving.",
+    "should_trigger": true,
+    "expected": "orchestrating-slots",
+    "note": "Running rounds / keeping the pipeline moving is the orchestration loop."
+  },
+  {
+    "query": "fix",
+    "should_trigger": true,
+    "expected": "orchestrating-slots",
+    "note": "Bare \"fix\" with no specific issue is the explicit bare-fix trigger — pull next N and dispatch."
+  },
+  {
+    "query": "Keep 4 agents busy on issues and refill a slot whenever one merges or fails.",
+    "should_trigger": true,
+    "expected": "orchestrating-slots",
+    "note": "Slot accounting + event-driven refill across many PRs is the loop, not a single dispatch."
+  },
+  {
+    "query": "Babysit the merge queue for the next couple hours and dispatch as slots free up.",
+    "should_trigger": true,
+    "expected": "orchestrating-slots",
+    "note": "Monitor/babysit the queue + slot-driven dispatch = orchestration."
+  },
+  {
+    "query": "Is the queue genuinely backed up right now, or is that just normal CI churn?",
+    "should_trigger": true,
+    "expected": "orchestrating-slots",
+    "note": "Backup detection (the three-condition rule) is an orchestration decision."
+  },
+  {
+    "query": "Should I dispatch another agent, or am I already saturated and should hold?",
+    "should_trigger": true,
+    "expected": "orchestrating-slots",
+    "note": "Deciding whether to fill another slot / apply backpressure is the loop's job."
+  },
+  {
+    "query": "Start working through the open issues, a handful at a time, and keep it going.",
+    "should_trigger": true,
+    "expected": "orchestrating-slots",
+    "note": "Casual; continuous batched throughput over the backlog is the N-slot loop."
+  },
+  {
+    "query": "Pause all dispatch across every session, then resume in an hour.",
+    "should_trigger": true,
+    "expected": "orchestrating-slots",
+    "note": "The pause/resume sentinel-issue mechanism is orchestration state."
+  },
+  {
+    "query": "Spawn one agent to implement #214 and write its dispatch brief.",
+    "should_trigger": false,
+    "expected": "dispatching-subagents",
+    "note": "A single dispatch with its brief is dispatching-subagents, not the slot loop."
+  },
+  {
+    "query": "PR #190 is stuck BLOCKED and green — why won't it merge?",
+    "should_trigger": false,
+    "expected": "driving-prs-to-merge",
+    "note": "One PR's stuck-state diagnosis is driving-prs-to-merge."
+  },
+  {
+    "query": "CI went red on #205 — read the failing job log and fix it.",
+    "should_trigger": false,
+    "expected": "driving-prs-to-merge",
+    "note": "Single-PR CI triage belongs to driving-prs-to-merge despite queue overlap."
+  },
+  {
+    "query": "An agent stalled and returned status:failed — salvage its worktree or re-dispatch?",
+    "should_trigger": false,
+    "expected": "dispatching-subagents",
+    "note": "Stalled-agent salvage is a dispatch concern, not the orchestration loop."
+  },
+  {
+    "query": "Define the agent-model and agent-effort labels and bootstrap them in this repo.",
+    "should_trigger": false,
+    "expected": "gh-issue-labels",
+    "note": "The control-field taxonomy/bootstrap is gh-issue-labels; the loop only reads these."
+  },
+  {
+    "query": "Claim #88 before anyone else and drop the lock comment.",
+    "should_trigger": false,
+    "expected": "gh-issue-locking",
+    "note": "The lock/claim protocol is gh-issue-locking; orchestration calls it but doesn't define it."
+  },
+  {
+    "query": "We've got a backlog of vague feature requests — let's groom them with the PM until they're dev-ready.",
+    "should_trigger": false,
+    "expected": "grooming-issues",
+    "note": "Grooming raw issues to intent is grooming-issues; 'backlog' is a lure, no dispatch loop."
+  },
+  {
+    "query": "Recon these five issues in parallel and tell me which are ready to dispatch.",
+    "should_trigger": false,
+    "expected": "technical-recon",
+    "note": "Parallel read-only recon to size issues is technical-recon, not slot-filling with implementers."
+  },
+  {
+    "query": "Turn this bug report into a properly groomed, labeled GitHub issue.",
+    "should_trigger": false,
+    "expected": "gh-issue-filing",
+    "note": "Filing one trackable issue is gh-issue-filing, upstream of any orchestration."
+  },
+  {
+    "query": "Our restaurant's reservation system is overbooking Friday nights — can you look into the slot logic?",
+    "should_trigger": false,
+    "expected": "none",
+    "note": "Truly unrelated: 'slots' here are dinner reservations, not agent concurrency slots."
+  }
+]

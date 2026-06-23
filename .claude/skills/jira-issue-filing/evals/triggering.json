@@ -1,0 +1,110 @@
+[
+ {
+  "query": "File a Jira ticket for this bug \u2014 the invoice row click throws a 404, here's the stack trace",
+  "should_trigger": true,
+  "expected": "jira-issue-filing",
+  "note": "Operator reports a bug to become a trackable Jira issue with evidence."
+ },
+ {
+  "query": "Can you write up this feature request as a story in PROJ so an agent can pick it up without asking questions?",
+  "should_trigger": true,
+  "expected": "jira-issue-filing",
+  "note": "Feature request -> groomed Jira story with the six-section dispatchable format."
+ },
+ {
+  "query": "make a Jira ticket for that",
+  "should_trigger": true,
+  "expected": "jira-issue-filing",
+  "note": "explicit Jira cue disambiguates from gh-issue-filing"
+ },
+ {
+  "query": "We've got a backlog of stub issues in Jira that need triage before we dispatch anything \u2014 classify them as ready, needs-input, or blocked",
+  "should_trigger": true,
+  "expected": "jira-issue-filing",
+  "note": "Queue triage / recon classification into terminal triage states is the filing skill's recon protocol."
+ },
+ {
+  "query": "I found some adjacent broken behavior while working PROJ-88 \u2014 should I just expand the PR or file something?",
+  "should_trigger": true,
+  "expected": "jira-issue-filing",
+  "note": "Discovered mid-task work must become a follow-up issue, not scope creep."
+ },
+ {
+  "query": "Split this multi-theme report into separate Jira issues, each one independently dispatchable",
+  "should_trigger": true,
+  "expected": "jira-issue-filing",
+  "note": "One-theme-per-issue splitting before filing is core filing-skill guidance."
+ },
+ {
+  "query": "Draft the description for PROJ-204 with verified file:line refs and literal acceptance criteria",
+  "should_trigger": true,
+  "expected": "jira-issue-filing",
+  "note": "Authoring the groomed six-section description with evidence is exactly this skill."
+ },
+ {
+  "query": "Triage this stub on Atlassian with the cheap model and emit the RECON OK contract line",
+  "should_trigger": true,
+  "expected": "jira-issue-filing",
+  "note": "Sandboxed cheap-model recon-triage with the machine-parseable output contract lives here."
+ },
+ {
+  "query": "An operator pasted a console error \u2014 turn it into a properly groomed issue with reproduction steps",
+  "should_trigger": true,
+  "expected": "jira-issue-filing",
+  "note": "Error paste -> trackable groomed issue; classic intake-to-filing path."
+ },
+ {
+  "query": "Lock PROJ-123 before you dispatch an agent at it",
+  "should_trigger": false,
+  "expected": "jira-issue-locking",
+  "note": "Claiming/locking before dispatch is the locking sibling, not filing."
+ },
+ {
+  "query": "Set this Jira issue to Highest priority and add the agent-effort-high label",
+  "should_trigger": false,
+  "expected": "jira-issue-fields",
+  "note": "Setting Priority/effort labels is the fields control-plane skill, not filing."
+ },
+ {
+  "query": "File a GitHub issue for this crash using the gh CLI",
+  "should_trigger": false,
+  "expected": "gh-issue-filing",
+  "note": "GitHub-tracker phrasing must route to the gh-* sibling, not the Jira filing skill."
+ },
+ {
+  "query": "Open an issue on GitHub and label it a bug \u2014 make a ticket for the team",
+  "should_trigger": false,
+  "expected": "gh-issue-filing",
+  "note": "Cross-tracker confuser: 'make a ticket' but explicitly GitHub -> gh-issue-filing."
+ },
+ {
+  "query": "This raw story isn't dev-ready \u2014 interactively groom it with the lead until the intent is clear",
+  "should_trigger": false,
+  "expected": "grooming-issues",
+  "note": "Interactive lead-driven grooming of a not-ready issue is grooming-issues, not filing."
+ },
+ {
+  "query": "Recon PROJ-310 \u2014 trace it into the code, give me an implementation approach and LoE estimate",
+  "should_trigger": false,
+  "expected": "technical-recon",
+  "note": "Dev-side recon producing approach + LoE is technical-recon, distinct from intake-triage filing."
+ },
+ {
+  "query": "Why is this Jira issue still open even though its PR merged last week?",
+  "should_trigger": false,
+  "expected": "jira-issue-locking",
+  "note": "Release-and-transition-on-merge question belongs to the locking skill."
+ },
+ {
+  "query": "Deep-dive the whole repo and write living spec docs for the domains you find",
+  "should_trigger": false,
+  "expected": "spelunking-specs",
+  "note": "Whole-codebase recon into living specs is spelunking-specs, unrelated to issue filing."
+ },
+ {
+  "query": "Convert the Q3 budget spreadsheet into a formatted xlsx with totals per region",
+  "should_trigger": false,
+  "expected": "none",
+  "note": "Truly unrelated spreadsheet task \u2014 no issue-tracker work at all."
+ }
+]

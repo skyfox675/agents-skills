@@ -1,0 +1,116 @@
+[
+ {
+  "query": "Can you groom these three issues before our tech review? They're pretty raw right now.",
+  "should_trigger": true,
+  "expected": "grooming-issues",
+  "note": "Explicit 'groom' + raw issues headed for tech review = textbook grooming."
+ },
+ {
+  "query": "This story is super vague \u2014 I genuinely can't tell what the stakeholder even wants. Flesh it out.",
+  "should_trigger": true,
+  "expected": "grooming-issues",
+  "note": "Vague intent + 'flesh it out' = clarify WHAT/WHY, grooming's job."
+ },
+ {
+  "query": "Issue #214 is half-written. Tighten up the story and get the scope nailed down so it's ready for the devs to size.",
+  "should_trigger": true,
+  "expected": "grooming-issues",
+  "note": "'Tighten the story' + scope, explicitly upstream of sizing = grooming."
+ },
+ {
+  "query": "The product lead dropped a one-liner ticket on me. Can you ask them what they actually mean and write it up properly?",
+  "should_trigger": true,
+  "expected": "grooming-issues",
+  "note": "Engage the lead with questions to assert intent, then fill the body = grooming."
+ },
+ {
+  "query": "These backlog items are too fuzzy to hand to engineering. Pin down what's in and out of scope for each.",
+  "should_trigger": true,
+  "expected": "grooming-issues",
+  "note": "Scope boundaries / in-vs-out before engineering, pre-dev product work = grooming."
+ },
+ {
+  "query": "We have a wishlist of feature requests with no detail. Clarify each one's intent until you're confident it reflects the ask.",
+  "should_trigger": true,
+  "expected": "grooming-issues",
+  "note": "Assert intent to high confidence that the story reflects the ask = grooming verbatim."
+ },
+ {
+  "query": "Before anyone estimates anything, make sure JIRA-88's story is actually right. Engage me with questions if it's unclear.",
+  "should_trigger": true,
+  "expected": "grooming-issues",
+  "note": "Interactive questions to the lead, explicitly before estimation = grooming, not recon."
+ },
+ {
+  "query": "Get these stories ready for tech review \u2014 they're not dev-ready yet, just stakeholder wishes.",
+  "should_trigger": true,
+  "expected": "grooming-issues",
+  "note": "Not-dev-ready -> ready-for-tech-review is exactly grooming's handoff."
+ },
+ {
+  "query": "I'm not sure this ticket captures what the customer asked for. Can you firm up the WHAT and WHY before we build it?",
+  "should_trigger": true,
+  "expected": "grooming-issues",
+  "note": "WHAT/WHY product intent pre-build = grooming, deliberately not the HOW."
+ },
+ {
+  "query": "File a new bug for the 404 on the invoice row \u2014 here's the repro.",
+  "should_trigger": false,
+  "expected": "gh-issue-filing",
+  "note": "Creating/filing a brand-new issue, not grooming an existing vague one."
+ },
+ {
+  "query": "Recon issue #309 and give me a level-of-effort estimate before we dispatch.",
+  "should_trigger": false,
+  "expected": "technical-recon",
+  "note": "Already-groomed issue, HOW + LoE sizing = technical-recon, not grooming."
+ },
+ {
+  "query": "This story is vague on implementation \u2014 trace it into the code and tell me how big it is.",
+  "should_trigger": false,
+  "expected": "technical-recon",
+  "note": "'Vague' tempts grooming but it's about HOW/size with code tracing = technical-recon."
+ },
+ {
+  "query": "Map how auth works across the whole app and write up the conventions we follow.",
+  "should_trigger": false,
+  "expected": "spelunking-specs",
+  "note": "Whole-app deep-dive into specs, not one issue's intent = spelunking-specs."
+ },
+ {
+  "query": "Apply the agent-effort:high label to these three tickets before we dispatch.",
+  "should_trigger": false,
+  "expected": "gh-issue-labels",
+  "note": "Label/control-plane operation, not story grooming."
+ },
+ {
+  "query": "Lock issue #57 and claim it before the agent starts work.",
+  "should_trigger": false,
+  "expected": "gh-issue-locking",
+  "note": "Claim/lock protocol \u2014 grooming explicitly never claims an issue."
+ },
+ {
+  "query": "The acceptance criteria on #44 are already approved \u2014 go ahead and rewrite them to read cleaner.",
+  "should_trigger": true,
+  "expected": "grooming-issues",
+  "note": "operator explicitly authorizes the AC rewrite this run \u2014 grooming's permitted exception"
+ },
+ {
+  "query": "Dispatch a sub-agent to implement the groomed ticket #91 and open a PR.",
+  "should_trigger": false,
+  "expected": "dispatching-subagents",
+  "note": "Implementation dispatch, downstream of grooming entirely."
+ },
+ {
+  "query": "Can you summarize the last week of messages in our #engineering Slack channel?",
+  "should_trigger": false,
+  "expected": "none",
+  "note": "Truly unrelated \u2014 Slack digest, nothing to do with issue grooming."
+ },
+ {
+  "query": "Why isn't my PR merging? CI looks green but it's stuck.",
+  "should_trigger": false,
+  "expected": "driving-prs-to-merge",
+  "note": "Post-open PR lifecycle, unrelated to grooming a story."
+ }
+]

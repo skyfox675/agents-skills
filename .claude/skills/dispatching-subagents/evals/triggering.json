@@ -1,0 +1,122 @@
+[
+  {
+    "query": "Issue #412 is groomed and ready. Spin up an agent to implement it and open a PR.",
+    "should_trigger": true,
+    "expected": "dispatching-subagents",
+    "note": "Spawning one implementation sub-agent from a ready issue — the core dispatch act."
+  },
+  {
+    "query": "Send an agent at #88 to fix the date-parsing bug.",
+    "should_trigger": true,
+    "expected": "dispatching-subagents",
+    "note": "\"send an agent at #N\" is explicitly called out as a trigger phrase even without the word dispatch."
+  },
+  {
+    "query": "Go fix these three bugs: #101, #102, #103. They touch different files.",
+    "should_trigger": true,
+    "expected": "dispatching-subagents",
+    "note": "File-disjoint issues to implement via agents — selection + parallel dispatch, not a loop request."
+  },
+  {
+    "query": "The agent I sent on #57 got watchdog-killed and returned status:failed. What now?",
+    "should_trigger": true,
+    "expected": "dispatching-subagents",
+    "note": "Stalled-agent worktree salvage vs re-dispatch decision lives here."
+  },
+  {
+    "query": "My sub-agent says it finished #200 and opened the PR. Should I believe it?",
+    "should_trigger": true,
+    "expected": "dispatching-subagents",
+    "note": "Verify-then-trust completion checks on a reported-complete dispatch."
+  },
+  {
+    "query": "Write the brief for an agent to refactor the auth module per issue PROJ-19, with a worktree and pre-push hygiene.",
+    "should_trigger": true,
+    "expected": "dispatching-subagents",
+    "note": "The eight-section dispatch brief (worktree, toolchain prefix, pre-push hygiene) is this skill's core."
+  },
+  {
+    "query": "Have a coding agent knock out the typo fixes in the settings page — they're all tiny.",
+    "should_trigger": true,
+    "expected": "dispatching-subagents",
+    "note": "Casual; bundling same-surface small fixes into one dispatch is a selection rule here."
+  },
+  {
+    "query": "Issue #310 has agent-model:opus set. Spawn the implementer at the right model and effort.",
+    "should_trigger": true,
+    "expected": "dispatching-subagents",
+    "note": "Model/effort resolution from chat > labels > defaults at dispatch time."
+  },
+  {
+    "query": "That agent on #44 stalled with commits in its worktree — salvage it instead of starting over.",
+    "should_trigger": true,
+    "expected": "dispatching-subagents",
+    "note": "Stalled-agent worktree audit and salvage path."
+  },
+  {
+    "query": "Build me a quick implementation for #5 — just one agent, nothing fancy.",
+    "should_trigger": true,
+    "expected": "dispatching-subagents",
+    "note": "Single-agent code implementation from a tracker issue is exactly this skill."
+  },
+  {
+    "query": "Keep 6 agents going on the backlog and refill a slot whenever one merges.",
+    "should_trigger": false,
+    "expected": "orchestrating-slots",
+    "note": "The N-slot fill/refill loop is orchestrating-slots, not a single dispatch."
+  },
+  {
+    "query": "Work the queue P0-first and react to merge events as they come in.",
+    "should_trigger": false,
+    "expected": "orchestrating-slots",
+    "note": "\"Work the queue\" + event-driven refill is the orchestration loop, not one dispatch."
+  },
+  {
+    "query": "PR #77 is green but won't merge — auto-merge seems to have mysteriously dropped.",
+    "should_trigger": false,
+    "expected": "driving-prs-to-merge",
+    "note": "Post-open PR lifecycle (auto-merge re-arm) — the agent already opened the PR."
+  },
+  {
+    "query": "CI is red on the PR my agent opened. Triage the failing job before we touch code.",
+    "should_trigger": false,
+    "expected": "driving-prs-to-merge",
+    "note": "CI failure triage on an already-open PR belongs to driving-prs-to-merge despite the agent mention."
+  },
+  {
+    "query": "Before I send any agent at it, #260 is still vague — help me tighten the story with the lead.",
+    "should_trigger": false,
+    "expected": "grooming-issues",
+    "note": "Issue not dev-ready; grooming the WHAT/WHY precedes dispatch — keyword 'agent' is a lure."
+  },
+  {
+    "query": "Recon #150 and tell me the implementation approach and LoE before we dispatch anyone.",
+    "should_trigger": false,
+    "expected": "technical-recon",
+    "note": "Read-only recon to size/approach a groomed issue — distinct dev-side pass before dispatch."
+  },
+  {
+    "query": "Lock #99 and set agent-claimed before anyone picks it up.",
+    "should_trigger": false,
+    "expected": "gh-issue-locking",
+    "note": "The claim/lock protocol itself is gh-issue-locking; dispatch only consumes it."
+  },
+  {
+    "query": "Which model tier should agent-model:* map to, and why is there no cheap-tier effort setting?",
+    "should_trigger": false,
+    "expected": "gh-issue-labels",
+    "note": "Definition of the control-field taxonomy is gh-issue-labels, not the act of dispatching."
+  },
+  {
+    "query": "Turn this stack trace the user pasted into a groomed, dispatchable GitHub issue.",
+    "should_trigger": false,
+    "expected": "gh-issue-filing",
+    "note": "Filing/grooming an issue to dispatchable shape is issue-filing, upstream of dispatch."
+  },
+  {
+    "query": "Our flight booking app keeps double-charging passengers on the return leg — can you reproduce it?",
+    "should_trigger": false,
+    "expected": "none",
+    "note": "Truly unrelated: an app-behavior reproduction request, no agent/issue orchestration involved."
+  }
+]

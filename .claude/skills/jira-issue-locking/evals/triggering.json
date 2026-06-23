@@ -1,0 +1,21 @@
+[
+  {"query": "Claim PROJ-123 before you dispatch an agent at it", "should_trigger": true, "expected": "jira-issue-locking", "note": "Lock-before-dispatch is the core trigger of the locking skill."},
+  {"query": "pick up the next open issue in PROJ and start working it", "should_trigger": true, "expected": "jira-issue-locking", "note": "Starting work means claiming/locking first; bare phrasing still triggers."},
+  {"query": "I'm about to claim the next 5 Jira tickets in one pass — what's the race re-check?", "should_trigger": true, "expected": "jira-issue-locking", "note": "Batch multi-claim flow with the optimistic-lock re-check is explicitly this skill."},
+  {"query": "Why is this Jira issue still open even though its PR merged into dev last week?", "should_trigger": true, "expected": "jira-issue-locking", "note": "PR-merge release + explicit transition-to-Done is the locking skill's job."},
+  {"query": "This ticket has an agent-claimed lock comment from another operator — is it active or stale and can I take it?", "should_trigger": true, "expected": "jira-issue-locking", "note": "Active-vs-stale decision and reclaim etiquette is core locking content."},
+  {"query": "release the lock on PROJ-456, the PR was closed without merging", "should_trigger": true, "expected": "jira-issue-locking", "note": "Release on the no-merge exit path is a locking-skill flow."},
+  {"query": "work PROJ-77", "should_trigger": true, "expected": "jira-issue-locking", "note": "'work PROJ-77' implies claim-before-dispatch; the skill names this exact phrasing."},
+  {"query": "These two coupled Jira issues will be fixed in one PR — how do I lock them as a bundle?", "should_trigger": true, "expected": "jira-issue-locking", "note": "Bundled-issue lock with lead + bundled_with pointers is locking-specific."},
+  {"query": "Another operator already holds this Jira issue — what do I do?", "should_trigger": true, "expected": "jira-issue-locking", "note": "What-to-do-when-someone-else-holds-it is explicit multi-operator etiquette here."},
+
+  {"query": "File a Jira ticket for this null-pointer crash with the stack trace", "should_trigger": false, "expected": "jira-issue-filing", "note": "Creating/writing an issue is filing, not the claim/lock protocol."},
+  {"query": "Apply the do-not-dispatch hold to PROJ-200 so nobody claims it", "should_trigger": false, "expected": "jira-issue-fields", "note": "The hold label is defined/operated by the fields control-plane skill."},
+  {"query": "Claim issue #42 on GitHub and add the agent-claimed label before dispatch", "should_trigger": false, "expected": "gh-issue-locking", "note": "Cross-tracker confuser: GitHub issue # + gh labels -> gh-issue-locking, not Jira."},
+  {"query": "Lock the GitHub issue and remember GitHub won't auto-close on the dev branch", "should_trigger": false, "expected": "gh-issue-locking", "note": "GitHub auto-close-on-non-default-branch caveat is the gh sibling's territory."},
+  {"query": "Which model and effort tier should this dispatch run at — check the labels first", "should_trigger": false, "expected": "jira-issue-fields", "note": "Model/effort resolution from labels is the fields skill, not locking."},
+  {"query": "Fill your slots P0-first and keep 8 agents going through the queue", "should_trigger": false, "expected": "orchestrating-slots", "note": "The N-slot orchestration loop is orchestrating-slots, not the per-issue lock protocol."},
+  {"query": "Spawn an implementation sub-agent from this groomed ticket and write the dispatch brief", "should_trigger": false, "expected": "dispatching-subagents", "note": "Building the dispatch brief is dispatching-subagents; locking only precedes it."},
+  {"query": "Groom this vague story with the lead until it's 90% clear on intent", "should_trigger": false, "expected": "grooming-issues", "note": "Interactive grooming of intent is grooming-issues, unrelated to claiming."},
+  {"query": "Encrypt these PDFs and merge them into a single locked file", "should_trigger": false, "expected": "none", "note": "Truly unrelated PDF task; 'lock' here means file encryption, not issue claiming."}
+]

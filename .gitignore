@@ -1,0 +1,22 @@
+# OS / editor junk
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# secrets / local config — never commit
+.env
+.env.*
+*.pem
+*.key
+id_rsa*
+.claude/settings.local.json
+
+# language scratch
+node_modules/
+__pycache__/
+*.pyc
+
+# local design/code spec output (generated in consumer repos, not here)
+/specs/
+/design-specs/
