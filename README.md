@@ -1,24 +1,31 @@
 # agents-skills
 
-A toolbox of skills and slash commands for AI coding assistants: Claude Code, Cursor, and GitHub Copilot.
+A toolbox of skills, slash commands, and agents for AI coding assistants: Claude Code, Cursor, and GitHub Copilot.
 
-A skill is knowledge the assistant loads on its own when your task matches it, so you set it up once and forget it. A command is a shortcut you type, like `/gh-issue the login button does nothing`, that runs a set workflow for you.
+It gives you four things:
 
-The whole set is built to get an accurate result for as few tokens as possible. It talks in a terse "caveman" mode and sends cheap work to cheap models. The model policy lives in [`MODEL-DEFAULTS.md`](MODEL-DEFAULTS.md) and [`CLAUDE.md`](CLAUDE.md).
+- **Skills** — knowledge the assistant loads on its own when your task matches; set up once and forget.
+- **Commands** — shortcuts you type, like `/gh-issue the login button does nothing`, that run a set workflow.
+- **Agents** — the cheap, specialized workers the commands spawn (locator, implementer, reviewer, and more), already wired up.
+- **MCPs** — optional connectors (Jira, AWS, a browser, Figma) that power specific commands; install only what you use.
+
+The whole set is built to get an accurate result for as few tokens as possible: it talks in a terse "caveman" mode and sends cheap work to cheap models. The model policy lives in [`MODEL-DEFAULTS.md`](MODEL-DEFAULTS.md) and [`CLAUDE.md`](CLAUDE.md).
 
 Do the Quickstart for your tool. The full list is under [What's included](#whats-included).
 
 ## Quickstart
 
-1. Get the files. Clone this repo and open the folder in your tool. Everything is already set up inside `.claude/`, `.cursor/`, and `.github/`. To use it in your own project instead, copy your tool's folder (named below) into your project root.
+1. **Get the files.** Clone this repo and open the folder in your tool. Skills, commands, and agents are already set up inside `.claude/` (and mirrored to `.cursor/` and `.github/`). To use them in your own project instead, copy your tool's folders (named below) into your project root.
 
    ```bash
    git clone https://github.com/skyfox675/agents-skills.git
    ```
 
-2. Install the helper skills. The small pointer skills (caveman, docx, humanizer, and the rest) point to tools maintained elsewhere, so you install the current version from the source. The quickest way: paste the prompt from your tool's section to your assistant and let it run.
+2. **Install the helper skills.** The small pointer skills (caveman, humanizer, docx, and the rest) point to tools maintained elsewhere, so you install the current version from the source. Paste the prompt from your tool's section below and let your assistant run it.
 
-3. Use it. Type `/` in the chat to list the commands, or describe your task and let the skills load on their own.
+3. **Add the MCPs you need (optional).** The Jira, AWS, browser, and Figma commands each need a matching MCP. Install only the ones for the flows you use, and register each under the server key shown — see [MCPs and external tools](#mcps-and-external-tools).
+
+4. **Use it.** Type `/` in the chat to list the commands, or describe your task and let the skills and agents kick in.
 
 Open your tool's section below and ignore the other two.
 
@@ -27,7 +34,7 @@ Open your tool's section below and ignore the other two.
 
 &nbsp;
 
-Skills and commands load automatically from the `.claude/` folder, so if you opened this repo they already work. Type `/` to see the commands. To use them in your own project, copy this repo's `.claude/` folder into your project root.
+Skills, commands, and agents load automatically from the `.claude/` folder, so if you opened this repo they already work. Type `/` to see the commands. To use them in your own project, copy this repo's `.claude/` folder into your project root. For the Jira / AWS / browser / Figma flows, add the matching MCP (see [MCPs and external tools](#mcps-and-external-tools)).
 
 Install the helper skills by pasting this to Claude Code:
 
@@ -48,7 +55,7 @@ Try it: `/gh-issue the export button on the reports page does nothing`.
 
 &nbsp;
 
-Cursor reads skills from `.claude/skills/` and commands from `.cursor/commands/`, both already in this repo. To use them in your own project, copy this repo's `.cursor/` and `.claude/skills/` folders into your project root. Type `/` in chat to see the commands.
+Cursor reads skills from `.claude/skills/`, commands from `.cursor/commands/`, and agents from `.cursor/agents/` — all already in this repo. To use them in your own project, copy this repo's `.cursor/` and `.claude/skills/` folders into your project root. Type `/` in chat to see the commands. For the Jira / AWS / browser / Figma flows, add the matching MCP (see [MCPs and external tools](#mcps-and-external-tools)).
 
 Install the helper skills by pasting this to Cursor:
 
@@ -69,7 +76,7 @@ Try it: `/gh-issue the export button on the reports page does nothing`.
 
 &nbsp;
 
-Copilot reads skills from `.claude/skills/` and commands (prompt files) from `.github/prompts/`, both already in this repo. To use them in your own project, copy this repo's `.github/` and `.claude/skills/` folders into your project root. Type `/` in Copilot Chat to see the commands.
+Copilot reads skills from `.claude/skills/`, commands (prompt files) from `.github/prompts/`, and agents from `.github/agents/` — all already in this repo. To use them in your own project, copy this repo's `.github/` and `.claude/skills/` folders into your project root. Type `/` in Copilot Chat to see the commands. For the Jira / AWS / browser / Figma flows, add the matching MCP (see [MCPs and external tools](#mcps-and-external-tools)).
 
 Custom commands work in VS Code Copilot. The Copilot CLI does not support them yet.
 
