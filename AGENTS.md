@@ -13,7 +13,7 @@ Because it is public and reusable, every artifact must be **clean of personal an
 ## Repository layout
 
 - `.claude/skills/<skill-name>/SKILL.md` — one directory per skill; YAML frontmatter (`name`, `description`) + body. Supporting files (`references/`, scripts) alongside.
-- `.claude/agents/<agent-name>.md` — one file per agent; frontmatter (`name`, `description`, `tools`, optional `model`) + system prompt. Ships 9 tiered worker agents the commands dispatch (`scout` cheap; `builder`/`reviewer`/`implementer`/`pr-rescuer`/`diagnostician`/`verifier`/`spelunker`/`design-mapper` workhorse). Mirrored to Cursor (`.cursor/agents/`) and Copilot (`.github/agents/*.agent.md`) via `make sync-agents`; never hand-edit the mirrors.
+- `.claude/agents/<agent-name>.md` — one file per agent; frontmatter (`name`, `description`, `tools`, optional `model`) + system prompt. Ships 12 tiered worker agents (`scout` cheap; `builder`/`reviewer`/`implementer`/`pr-rescuer`/`diagnostician`/`verifier`/`spelunker`/`design-mapper` workhorse — these the commands dispatch — plus the `pr-comments`/`pr-checks`/`pr-cleanup` single-lane PR watchers run via `/loop`). Mirrored to Cursor (`.cursor/agents/`) and Copilot (`.github/agents/*.agent.md`) via `make sync-agents`; never hand-edit the mirrors.
 - `.claude/settings.json` — Claude Code config (`model: opus`, `includeCoAuthoredBy: false`).
 - `CLAUDE.md` — Claude Code's copy of this guidance.
 - `README.md` — human entry point.
