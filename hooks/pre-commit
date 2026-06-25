@@ -1,0 +1,28 @@
+#!/bin/sh
+# pre-commit — scan staged changes for secrets with gitleaks.
+#
+# Catches accidental credential commits before they ever leave the machine —
+# the single most valuable local hook for a public repo. Soft dependency: if
+# gitleaks isn't installed the hook prints how to get it and lets the commit
+# through (it does not silently pass-and-pretend; it tells you it skipped).
+#
+# Pair this with the gitleaks CI workflow (hooks/gitleaks.yml) so the scan is
+# also enforced for contributors who haven't installed the local hook.
+#
+# False positive? Add a narrowly-scoped rule to a .gitleaks.toml at the repo
+# root rather than disabling the hook. Bypass is `git commit --no-verify`
+# (emergency only).
+
+if command -v gitleaks >/dev/null 2>&1; then
+  if ! gitleaks protect --staged --redact --no-banner; then
+    echo "pre-commit: ✗ gitleaks flagged a potential secret in the staged changes." >&2
+    echo "            Remove it, or if it's a false positive add an allow rule to .gitleaks.toml." >&2
+    exit 1
+  fi
+else
+  echo "pre-commit: gitleaks not installed — skipping local secret scan."
+  echo "            Install it:  brew install gitleaks"
+  echo "            or see:       https://github.com/gitleaks/gitleaks#installing"
+fi
+
+exit 0

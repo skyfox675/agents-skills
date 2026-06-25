@@ -1,0 +1,35 @@
+# Gitleaks — secret-scanning CI template (recommended for public repos).
+#
+# Copy to .github/workflows/gitleaks.yml in your repo.
+#
+# The local pre-commit hook (hooks/pre-commit) only protects contributors who
+# installed it. This server-side scan enforces secret scanning for everyone —
+# every push and every PR. Scoped, narrowly-defined false positives go in a
+# .gitleaks.toml at the repo root.
+
+name: Gitleaks
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  gitleaks:
+    name: Secret scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+        with:
+          # Full history so the scan covers the whole pushed range, not just
+          # the tip commit.
+          fetch-depth: 0
+      - name: Run gitleaks
+        uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7  # v2.3.9
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # GITLEAKS_LICENSE is only required for gitleaks-action on private
+          # GitHub Organization repos; public repos need no license.

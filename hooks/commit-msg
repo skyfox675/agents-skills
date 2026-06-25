@@ -1,0 +1,59 @@
+#!/bin/sh
+# commit-msg — enforce Conventional Commits format, dependency-free.
+#
+# A portable, copy-anywhere replacement for a commitlint hook: no Node, no
+# pnpm, no config file. Drop it into any repo (see hooks/README.md for install).
+#
+# Rejects headers that don't match:
+#   <type>(<optional-scope>)<optional !>: <subject>
+#
+# Allowed types (the Conventional Commits standard set):
+#   feat fix docs style refactor perf test build ci chore revert
+#
+# VALID:
+#   feat: add a new skill loader
+#   fix(parser): handle an empty input file
+#   chore!: drop support for the legacy format
+# REJECTED:
+#   wip / WIP / update stuff   (no type)
+#   feat: FIXME later          (ALL-CAPS subject start)
+#
+# Bypass exists (`git commit --no-verify`) but treat it as an emergency-only
+# escape — fix the message instead.
+
+msg_file="$1"
+
+# Header = first non-blank, non-comment line.
+header=$(grep -vE '^[[:space:]]*#' "$msg_file" | sed '/^[[:space:]]*$/d' | head -n1)
+
+# Auto-generated messages (merge/revert/fixup/squash) are exempt.
+case "$header" in
+  "Merge "*|"Revert "*|"fixup! "*|"squash! "*|"amend! "*) exit 0 ;;
+esac
+
+types='feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert'
+pattern="^(${types})(\([a-z0-9._/-]+\))?!?: .+"
+
+ok=1
+printf '%s' "$header" | grep -qE "$pattern" || ok=0
+
+# Subject (text after the first ": ") must not start ALL-CAPS — mirrors the
+# pr-title CI check so the squash-merge commit message stays consistent.
+subject=$(printf '%s' "$header" | sed 's/^[^:]*: //')
+printf '%s' "$subject" | grep -qE '^[A-Z]{2,}' && ok=0
+
+if [ "$ok" -ne 1 ]; then
+  echo "commit-msg: ✗ \"$header\"" >&2
+  echo "            does not follow Conventional Commits." >&2
+  echo "            Format: <type>(<scope>)?: <subject>   (subject not ALL-CAPS)" >&2
+  echo "            Types:  ${types}" >&2
+  echo "            e.g.    feat(loader): add a new skill loader" >&2
+  exit 1
+fi
+
+# Non-blocking nudge: conventional headers stay short.
+if [ "${#header}" -gt 100 ]; then
+  echo "commit-msg: note — header is ${#header} chars; keep it under ~72 when you can." >&2
+fi
+
+exit 0

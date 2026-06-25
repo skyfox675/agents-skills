@@ -186,6 +186,20 @@ Most commands need nothing extra. These add capabilities for specific command fa
 
 Which model each tool uses per platform is in [`MODEL-DEFAULTS.md`](MODEL-DEFAULTS.md). The helper skills (caveman, humanizer, docx, and the rest) install in the Quickstart above.
 
+## Git hooks
+
+[`hooks/`](hooks) holds portable, dependency-free git hooks and matching CI workflows you can drop into any repo — they are templates, not wired to this repo. Plain POSIX `sh`, no husky or Node; every external tool is optional and skips when absent.
+
+| File | Kind | Does |
+|---|---|---|
+| `commit-msg` | local | Enforces Conventional Commits format on the message. |
+| `pre-commit` | local | Scans staged changes for secrets with gitleaks. |
+| `pre-push` | local | Lint gate: your project's own check + Claude artifact frontmatter + markdownlint + actionlint. |
+| `pr-title.yml` | CI | Server-side PR-title format check; mirrors `commit-msg`. |
+| `gitleaks.yml` | CI | Server-side secret scan on every push and PR. |
+
+Install: `sh hooks/install.sh` (points `core.hooksPath` at `hooks/`), then copy the CI templates into `.github/workflows/`. Details and customization in [`hooks/README.md`](hooks/README.md).
+
 ## Going deeper
 
 - [`MODEL-DEFAULTS.md`](MODEL-DEFAULTS.md) covers which model each task uses, per platform, and how to save tokens.

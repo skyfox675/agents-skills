@@ -28,6 +28,8 @@ make check    # fails if anything drifted — run this in CI
 
 Skills are read directly from `.claude/skills/` by all three tools, so they have no mirror.
 
+Git hook templates live under `hooks/` (plain POSIX `sh` + CI workflow templates). They are shareable, not wired to this repo, and have no mirror — keep them dependency-free and generic, with every external tool optional (skip-if-absent). See [`hooks/README.md`](hooks/README.md).
+
 ## Adding things
 
 - **A skill** — `SKILL.md` with YAML frontmatter (`name`, `description`). The `name` is a public API; renaming it breaks consumers, so keep it stable. Make the `description` action-oriented; it is what each tool uses to decide when to trigger. A **pointer skill** records a name and an upstream link only — never inline upstream content. Ship triggering evals at `<skill>/evals/triggering.json` (8–10 should-trigger queries plus 8–10 should-not-trigger near-misses, per the skill-creator method).

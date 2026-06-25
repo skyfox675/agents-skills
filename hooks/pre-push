@@ -1,0 +1,97 @@
+#!/bin/sh
+# pre-push — the lint gate. Run the project's own checks plus portable,
+# dependency-free linting before anything leaves the machine.
+#
+# This is the portable stand-in for a monorepo "turbo run lint" hook. A content
+# repo has no Node/turbo toolchain, so instead of a build system this runs:
+#   1. the project's own gate          (make check, if present — CUSTOMIZE below)
+#   2. Claude artifact frontmatter      (skills/agents/commands — stdlib Python)
+#   3. markdownlint on tracked Markdown (soft dep, skip-if-absent)
+#   4. actionlint on workflow files     (soft dep, skip-if-absent)
+#
+# Every external tool is optional and skips loudly when absent — the hook works
+# in a bare repo and gets stricter as you install tools. Bypass is
+# `git push --no-verify` (emergency only).
+
+fail=0
+
+# ── 1. Project gate (CUSTOMIZE) ──────────────────────────────────────────────
+# Replace or extend with your project's real lint/typecheck/test command, e.g.
+#   make check            (this repo: regenerates+verifies the tool mirrors)
+#   npm run lint          /  pnpm turbo run lint  /  cargo clippy  /  go vet ./...
+if [ -f Makefile ] && grep -qE '^check:' Makefile; then
+  echo "pre-push: running 'make check' (project gate)…"
+  make check || fail=1
+fi
+
+# ── 2. Claude artifact frontmatter (skills / agents / commands) ──────────────
+# Structural check: each artifact starts with a YAML frontmatter block that
+# carries name + description. Uses PyYAML if available, else a key presence
+# check — no third-party dependency required.
+if command -v python3 >/dev/null 2>&1 && [ -d .claude ]; then
+  python3 - <<'PY' || fail=1
+import glob, re, sys
+# Skills and agents carry name + description. Commands omit name (the filename
+# is the command), so they only require description.
+targets = ([(f, ('name', 'description')) for f in glob.glob('.claude/skills/*/SKILL.md')]
+           + [(f, ('name', 'description')) for f in glob.glob('.claude/agents/*.md')]
+           + [(f, ('description',)) for f in glob.glob('.claude/commands/*.md')])
+bad = []
+for f, required in targets:
+    t = open(f, encoding='utf-8').read()
+    if not t.startswith('---'):
+        bad.append((f, 'no YAML frontmatter')); continue
+    parts = t.split('---', 2)
+    if len(parts) < 3:
+        bad.append((f, 'unterminated frontmatter')); continue
+    fm = parts[1]
+    try:
+        import yaml
+        d = yaml.safe_load(fm) or {}
+        miss = [k for k in required if not d.get(k)]
+        if miss:
+            bad.append((f, 'missing: ' + ', '.join(miss)))
+    except ImportError:
+        for k in required:
+            if not re.search(r'(?m)^%s\s*:' % k, fm):
+                bad.append((f, 'missing: ' + k))
+    except Exception as e:
+        bad.append((f, 'invalid YAML: %s' % e))
+for f, why in bad:
+    print('  frontmatter: %s — %s' % (f, why))
+if bad:
+    print('pre-push: ✗ %d artifact(s) have invalid frontmatter.' % len(bad))
+sys.exit(1 if bad else 0)
+PY
+fi
+
+# ── 3. markdownlint (soft dep) ───────────────────────────────────────────────
+if command -v markdownlint-cli2 >/dev/null 2>&1; then
+  echo "pre-push: running markdownlint-cli2…"
+  markdownlint-cli2 "**/*.md" "#node_modules" || fail=1
+elif command -v markdownlint >/dev/null 2>&1; then
+  echo "pre-push: running markdownlint…"
+  find . -path ./.git -prune -o -path ./node_modules -prune -o -name '*.md' -print0 \
+    | xargs -0 markdownlint || fail=1
+else
+  echo "pre-push: markdownlint not installed — skipping Markdown lint."
+  echo "          Install:  npm i -g markdownlint-cli2"
+fi
+
+# ── 4. actionlint on workflow files (soft dep) ───────────────────────────────
+if ls .github/workflows/*.yml .github/workflows/*.yaml >/dev/null 2>&1; then
+  if command -v actionlint >/dev/null 2>&1; then
+    echo "pre-push: running actionlint…"
+    actionlint || fail=1
+  else
+    echo "pre-push: actionlint not installed — skipping workflow lint."
+    echo "          Install:  brew install actionlint"
+  fi
+fi
+
+if [ "$fail" -ne 0 ]; then
+  echo "pre-push: ✗ checks failed above — fix them or push with --no-verify (emergency only)." >&2
+  exit 1
+fi
+echo "pre-push: ✓ all checks passed."
+exit 0
