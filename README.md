@@ -197,8 +197,9 @@ Which model each tool uses per platform is in [`MODEL-DEFAULTS.md`](MODEL-DEFAUL
 | `pre-push` | local | Lint gate: your project's own check + Claude artifact frontmatter + markdownlint + actionlint. |
 | `pr-title.yml` | CI | Server-side PR-title format check; mirrors `commit-msg`. |
 | `gitleaks.yml` | CI | Server-side secret scan on every push and PR. |
+| `claude-code-pretooluse.sh` | harness | Optional Claude Code `PreToolUse` bridge: runs the same checks before the model's `git commit`/`git push`, and can't be `--no-verify`'d. |
 
-Install: `sh hooks/install.sh` (points `core.hooksPath` at `hooks/`), then copy the CI templates into `.github/workflows/`. Details and customization in [`hooks/README.md`](hooks/README.md).
+Install: `sh hooks/install.sh` (points `core.hooksPath` at `hooks/`), then copy the CI templates into `.github/workflows/`. For the optional Claude Code harness layer, merge `hooks/claude-settings.hooks.json` into `.claude/settings.json`. Details and customization in [`hooks/README.md`](hooks/README.md).
 
 ## Going deeper
 

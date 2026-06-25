@@ -1,0 +1,16 @@
+{
+  "//": "Claude Code harness-hook template. Merge the `hooks` block into your repo's .claude/settings.json (or settings.local.json). It runs the SAME pre-commit / pre-push scripts in hooks/ before the model executes a git commit / git push, so failures block the tool call (exit 2) and the model self-corrects. Complements the git-level hooks (install.sh); use either or both. $CLAUDE_PROJECT_DIR is set by Claude Code to the repo root.",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh \"$CLAUDE_PROJECT_DIR/hooks/claude-code-pretooluse.sh\""
+          }
+        ]
+      }
+    ]
+  }
+}
