@@ -122,7 +122,7 @@ A common flow: groom a vague ticket, size it with recon, build it with dispatch,
 
 ### Skills (load automatically)
 
-These power the commands above, so you rarely call them by hand.
+These power the commands above (and the `/loop` watcher and CI-hunter lanes), so you rarely call them by hand.
 
 | Skill | What it does |
 |---|---|
@@ -154,7 +154,7 @@ The helper skills below point to tools maintained elsewhere. You install them in
 
 ### Agents
 
-These are the workers the commands spawn. Each one runs on the cheapest model that fits, so heavy work stays cheap. The canonical agents live in `.claude/agents/`; `make sync-agents` generates the Cursor (`.cursor/agents/`) and Copilot (`.github/agents/`) copies, so all three tools get them.
+These are the workers the commands spawn, plus the single-lane watchers and CI hunters you run continuously with `/loop`. Each one runs on the cheapest model that fits, so heavy work stays cheap. The canonical agents live in `.claude/agents/`; `make sync-agents` generates the Cursor (`.cursor/agents/`) and Copilot (`.github/agents/`) copies, so all three tools get them.
 
 | Agent | Tier | Backs | What it does |
 |---|---|---|---|
