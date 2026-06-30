@@ -129,6 +129,7 @@ These power the commands above, so you rarely call them by hand.
 | `dispatching-subagents` | Turns a ready ticket into a running implementation agent and a PR. |
 | `driving-prs-to-merge` | Gets an opened PR all the way to merged: CI triage, review threads, conflicts, merge queue. |
 | `pr-comments` · `pr-checks` · `pr-cleanup` | Single-lane interval watchers: one drives review threads to resolved and arms auto-merge, one keeps CI green and the merge queue healthy, one tidies up after PRs close. |
+| `ci-speed-hunting` · `ci-flake-hunting` | Continuous CI lanes: one mines timing to cut wall-clock latency without losing coverage, one root-causes flakes and fixes them forward — both to raise merge-queue throughput. |
 | `orchestrating-slots` | The N-slot loop that keeps a fixed number of agents working the queue. |
 | `gh-issue-filing` · `jira-issue-filing` | How to write a ticket an agent can build with no follow-up questions. |
 | `gh-issue-locking` · `jira-issue-locking` | Claims and locks tickets so two people never double-work the same one. |
@@ -165,6 +166,8 @@ These are the workers the commands spawn. Each one runs on the cheapest model th
 | `pr-comments` | workhorse | `/loop` review lane | Drives bot + human review threads to resolved, then arms auto-merge. |
 | `pr-checks` | workhorse | `/loop` CI lane | Keeps checks green and the merge queue healthy (head-green ≠ queue-green). |
 | `pr-cleanup` | workhorse | `/loop` cleanup lane | Post-merge janitor: closes issues, releases locks, reclaims local disk. |
+| `ci-speed-hunter` | workhorse | `/loop` CI-speed lane | Mines CI timing and cuts wall-clock latency without losing coverage. |
+| `ci-flake-hunter` | workhorse | `/loop` CI-flake lane | Root-causes flaky jobs and fixes them forward; never masks. |
 | `diagnostician` | workhorse | `use-aws`, `use-chrome`, recon | Read-only AWS and browser repro that returns evidence. |
 | `verifier` | workhorse | dispatch, recon, spelunking | Verify-then-trust gate. Trusts no claim unchecked. |
 | `spelunker` | workhorse | `/spelunking-init-spec` | Maps one domain of a codebase into specs. |
