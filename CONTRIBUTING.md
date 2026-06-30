@@ -19,14 +19,14 @@ Canonical sources live under `.claude/`:
 - Commands: `.claude/commands/<name>.md`
 - Agents: `.claude/agents/<name>.md`
 
-Commands and agents are **generated** into the Cursor and Copilot homes (`.cursor/`, `.github/prompts/`, `.github/agents/`). **Never hand-edit those mirrors.** After editing a command or agent:
+Commands and agents are **generated** into the Cursor, Copilot, Kiro, and OpenCode homes (`.cursor/`, `.github/prompts/`, `.github/agents/`, `.kiro/agents/`, `.opencode/agents/`). **Never hand-edit those mirrors.** After editing a command or agent:
 
 ```
 make sync     # regenerate the Cursor + Copilot mirrors
 make check    # fails if anything drifted — run this in CI
 ```
 
-Skills are read directly from `.claude/skills/` by all three tools, so they have no mirror.
+Skills are read directly from `.claude/skills/` by Claude Code, Cursor, and Copilot, so they need no mirror. Kiro and OpenCode read the same Anthropic Agent Skills format but from their own dirs, so `.kiro/skills` and `.opencode/skills` are symlinks to `.claude/skills` — `make sync-skills` creates them; `make check-skills` verifies. Still one source of truth.
 
 Git hook templates live under `hooks/` (plain POSIX `sh` + CI workflow templates). They are shareable, not wired to this repo, and have no mirror — keep them dependency-free and generic, with every external tool optional (skip-if-absent). See [`hooks/README.md`](hooks/README.md).
 

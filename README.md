@@ -1,6 +1,6 @@
 # agents-skills
 
-A toolbox of skills, slash commands, and agents for AI coding assistants: Claude Code, Cursor, and GitHub Copilot.
+A toolbox of skills, slash commands, and agents for AI coding assistants: Claude Code, Cursor, GitHub Copilot, Kiro, and OpenCode.
 
 It gives you four things:
 
@@ -154,7 +154,7 @@ The helper skills below point to tools maintained elsewhere. You install them in
 
 ### Agents
 
-These are the workers the commands spawn, plus the single-lane watchers and CI hunters you run continuously with `/loop`. Each one runs on the cheapest model that fits, so heavy work stays cheap. The canonical agents live in `.claude/agents/`; `make sync-agents` generates the Cursor (`.cursor/agents/`) and Copilot (`.github/agents/`) copies, so all three tools get them.
+These are the workers the commands spawn, plus the single-lane watchers and CI hunters you run continuously with `/loop`. Each one runs on the cheapest model that fits, so heavy work stays cheap. The canonical agents live in `.claude/agents/`; `make sync-agents` generates the Cursor (`.cursor/agents/`), Copilot (`.github/agents/`), Kiro (`.kiro/agents/`), and OpenCode (`.opencode/agents/`) copies, so every supported tool gets them.
 
 | Agent | Tier | Backs | What it does |
 |---|---|---|---|
@@ -209,7 +209,7 @@ Install: `sh hooks/install.sh` (points `core.hooksPath` at `hooks/`), then copy 
 - [`MODEL-DEFAULTS.md`](MODEL-DEFAULTS.md) covers which model each task uses, per platform, and how to save tokens.
 - [`CLAUDE.md`](CLAUDE.md) and [`AGENTS.md`](AGENTS.md) cover the conventions, the model policy, and how the three tools stay in sync.
 - [`.claude/skills/`](.claude/skills) holds every skill. The pointer skills list their own install steps.
-- To edit a command or agent, change it in `.claude/commands/` or `.claude/agents/`, then run `make sync` to update the Cursor and Copilot copies.
+- To edit a command or agent, change it in `.claude/commands/` or `.claude/agents/`, then run `make sync` to update the Cursor, Copilot, Kiro, and OpenCode copies.
 - [`CONTRIBUTING.md`](CONTRIBUTING.md) — how to add skills/commands/agents and the sync rule. [`SECURITY.md`](SECURITY.md) — how to report a security issue.
 
 ## License

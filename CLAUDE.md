@@ -15,7 +15,7 @@ Because it is public and reusable, every artifact must be **clean of personal an
 Skills and Agents are the two primary artifact types. The canonical homes are the directories Claude Code auto-discovers:
 
 - `.claude/skills/<skill-name>/SKILL.md` — one directory per skill; `SKILL.md` holds YAML frontmatter (`name`, `description`) + the skill body. Supporting files (`references/`, scripts) live alongside it.
-- `.claude/agents/<agent-name>.md` — one file per agent; frontmatter (`name`, `description`, `tools`, optional `model`) + system prompt. Ships 14 tiered worker agents (`scout` on the cheap tier; `builder`, `reviewer`, `implementer`, `pr-rescuer`, `diagnostician`, `verifier`, `spelunker`, `design-mapper` on workhorse — these the commands dispatch — plus the `pr-comments`, `pr-checks`, `pr-cleanup` single-lane PR watchers and the `ci-speed-hunter`, `ci-flake-hunter` continuous CI lanes, all run via `/loop`). Canonical agents live here; `make sync-agents` generates the Cursor (`.cursor/agents/`, `model`/`readonly` schema) and Copilot (`.github/agents/*.agent.md`) copies — never hand-edit those. Keep agents thin and point at the relevant skill for the protocol.
+- `.claude/agents/<agent-name>.md` — one file per agent; frontmatter (`name`, `description`, `tools`, optional `model`) + system prompt. Ships 14 tiered worker agents (`scout` on the cheap tier; `builder`, `reviewer`, `implementer`, `pr-rescuer`, `diagnostician`, `verifier`, `spelunker`, `design-mapper` on workhorse — these the commands dispatch — plus the `pr-comments`, `pr-checks`, `pr-cleanup` single-lane PR watchers and the `ci-speed-hunter`, `ci-flake-hunter` continuous CI lanes, all run via `/loop`). Canonical agents live here; `make sync-agents` generates the Cursor (`.cursor/agents/`, `model`/`readonly` schema), Copilot (`.github/agents/*.agent.md`), Kiro (`.kiro/agents/`, `tools` category allowlist) and OpenCode (`.opencode/agents/`, `mode`/`permission`) copies — never hand-edit those. Keep agents thin and point at the relevant skill for the protocol.
 - `.claude/settings.json` — repo-level Claude Code config. Currently pins `model: opus` and `includeCoAuthoredBy: false` (commits authored without the Claude co-author trailer).
 
 When adding the first artifacts, create these directories. Top-level `README.md` is the human entry point.
@@ -29,13 +29,15 @@ When asked to add or rename a skill, treat the `name` as a public API: renaming 
 
 ## Cross-tool consumability
 
-The same artifact often needs to be reachable from three tools. Keep the content authored once (canonically under `.claude/`) and expose it to the others rather than forking copies:
+The same artifact often needs to be reachable from five tools. Keep the content authored once (canonically under `.claude/`) and expose it to the others rather than forking copies:
 
 - **Claude Code** — reads `CLAUDE.md`, `.claude/skills/`, `.claude/agents/` natively.
-- **GitHub Copilot** — reads `.github/copilot-instructions.md` (and `AGENTS.md`).
-- **Cursor** — reads `AGENTS.md` (and `.cursor/rules/*.mdc` if you add project rules).
+- **GitHub Copilot** — reads `.github/copilot-instructions.md` (and `AGENTS.md`); agents in `.github/agents/*.agent.md`.
+- **Cursor** — reads `AGENTS.md` (and `.cursor/rules/*.mdc` if you add project rules); agents in `.cursor/agents/`.
+- **Kiro** — reads agents from `.kiro/agents/<name>.md` and skills from `.kiro/skills/` (the Anthropic Agent Skills format, same as `.claude/skills/`).
+- **OpenCode** — reads agents from `.opencode/agents/<name>.md` and skills from `.opencode/skills/` (same Agent Skills format).
 
-Prefer a shared `AGENTS.md` (Copilot + Cursor both honor it) that mirrors or references this file, over maintaining divergent copies. If a new artifact only makes sense for one tool, say so in its body.
+Because Kiro and OpenCode read the **identical** skill format, `.kiro/skills` and `.opencode/skills` are symlinks to `.claude/skills` (one source of truth) — `make sync-skills` creates/repairs them. Agents, whose frontmatter differs per tool, are **generated** copies (see below). Prefer a shared `AGENTS.md` (Copilot + Cursor both honor it) over maintaining divergent copies. If a new artifact only makes sense for one tool, say so in its body.
 
 **Slash commands don't share a home or format** — each tool needs its own copy, so the canonical `.claude/commands/*.md` are mirrored:
 

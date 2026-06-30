@@ -13,7 +13,7 @@ Because it is public and reusable, every artifact must be **clean of personal an
 ## Repository layout
 
 - `.claude/skills/<skill-name>/SKILL.md` — one directory per skill; YAML frontmatter (`name`, `description`) + body. Supporting files (`references/`, scripts) alongside.
-- `.claude/agents/<agent-name>.md` — one file per agent; frontmatter (`name`, `description`, `tools`, optional `model`) + system prompt. Ships 14 tiered worker agents (`scout` cheap; `builder`/`reviewer`/`implementer`/`pr-rescuer`/`diagnostician`/`verifier`/`spelunker`/`design-mapper` workhorse — these the commands dispatch — plus the `pr-comments`/`pr-checks`/`pr-cleanup` single-lane PR watchers and the `ci-speed-hunter`/`ci-flake-hunter` continuous CI lanes, all run via `/loop`). Mirrored to Cursor (`.cursor/agents/`) and Copilot (`.github/agents/*.agent.md`) via `make sync-agents`; never hand-edit the mirrors.
+- `.claude/agents/<agent-name>.md` — one file per agent; frontmatter (`name`, `description`, `tools`, optional `model`) + system prompt. Ships 14 tiered worker agents (`scout` cheap; `builder`/`reviewer`/`implementer`/`pr-rescuer`/`diagnostician`/`verifier`/`spelunker`/`design-mapper` workhorse — these the commands dispatch — plus the `pr-comments`/`pr-checks`/`pr-cleanup` single-lane PR watchers and the `ci-speed-hunter`/`ci-flake-hunter` continuous CI lanes, all run via `/loop`). Mirrored to Cursor (`.cursor/agents/`), Copilot (`.github/agents/*.agent.md`), Kiro (`.kiro/agents/`) and OpenCode (`.opencode/agents/`) via `make sync-agents`; never hand-edit the mirrors. Skills are exposed to Kiro and OpenCode (same Agent Skills format) as symlinks `.kiro/skills` / `.opencode/skills` → `.claude/skills` via `make sync-skills`.
 - `.claude/settings.json` — Claude Code config (`model: opus`, `includeCoAuthoredBy: false`).
 - `CLAUDE.md` — Claude Code's copy of this guidance.
 - `README.md` — human entry point.
@@ -30,8 +30,10 @@ Treat a skill/agent `name` as a public API: renaming breaks consumers who invoke
 Author content once (canonically under `.claude/`) and expose it to the other tools rather than forking copies:
 
 - **Claude Code** — reads `CLAUDE.md`, `.claude/skills/`, `.claude/agents/`.
-- **GitHub Copilot** — reads `.github/copilot-instructions.md` (points here) and this `AGENTS.md`.
-- **Cursor** — reads this `AGENTS.md` (and `.cursor/rules/*.mdc` if you add project rules).
+- **GitHub Copilot** — reads `.github/copilot-instructions.md` (points here) and this `AGENTS.md`; agents in `.github/agents/`.
+- **Cursor** — reads this `AGENTS.md` (and `.cursor/rules/*.mdc` if you add project rules); agents in `.cursor/agents/`.
+- **Kiro** — agents in `.kiro/agents/`, skills in `.kiro/skills/` (Anthropic Agent Skills format).
+- **OpenCode** — agents in `.opencode/agents/`, skills in `.opencode/skills/` (same Agent Skills format).
 
 **Slash commands** don't share a home or format, so the canonical `.claude/commands/*.md` are mirrored per tool by `scripts/sync-commands.py` (`make sync-commands`; `make check-commands` for CI). Never hand-edit the mirrors — regenerate them. Filename = command name across all three:
 
