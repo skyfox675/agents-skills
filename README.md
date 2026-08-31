@@ -224,6 +224,7 @@ These are the workers the commands spawn, plus the single-lane watchers and CI h
 | `builder` | workhorse | small dispatches | Surgical one- or two-file edits. Refuses bigger scope. |
 | `reviewer` | workhorse | `/dispatch`, pre-merge | Adversarial diff review, tagged by severity. |
 | `implementer` | workhorse | `/dispatch` dev slots | Builds one issue, writes tests, opens a PR. |
+| `pr-dispatcher` | workhorse | `/loop` dev lane | Keeps dev slots full. Claims groomed issues, spawns `implementer`, hands the PR off at open. |
 | `pr-rescuer` | workhorse | `/rescue` | Unsticks stuck PRs and red CI. |
 | `pr-comments` | workhorse | `/loop` review lane | Drives bot and human review threads to resolved, then arms auto-merge. |
 | `pr-checks` | workhorse | `/loop` CI lane | Keeps checks green and the merge queue healthy. Head-green is not queue-green. |
