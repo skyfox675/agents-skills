@@ -39,6 +39,7 @@ The watchers in this repo:
 - `pr-comments` drives review threads to resolved, then arms auto-merge.
 - `pr-checks` keeps checks green and the merge queue healthy.
 - `pr-cleanup` acts only on closed PRs: close the issue, release the lock, reclaim the disk.
+- `deploy-watcher` keeps the integration environment's deploy green: re-runs a transient red, fixes a real one forward, never reverts.
 - `branch-ff` keeps the primary checkout fast-forwarded so fresh worktrees start from a current base.
 
 Lanes never cross, and that restraint is the whole design. A watcher that notices something outside its lane logs it and moves on. Two watchers reaching for the same PR is how you get a race and a force-push.

@@ -190,6 +190,7 @@ These power the commands above, plus the `/loop` watcher and CI-hunter lanes, so
 | `dispatching-subagents` | Turns a ready ticket into a running implementation agent and a PR. |
 | `driving-prs-to-merge` | Gets an opened PR all the way to merged: CI triage, review threads, conflicts, merge queue. |
 | `pr-comments` · `pr-checks` · `pr-cleanup` | Single-lane interval watchers. One drives review threads to resolved and arms auto-merge, one keeps CI green and the merge queue healthy, one tidies up after PRs close. |
+| `deploy-watching` | Interval watcher for the integration environment's deploy. Tells a transient red from a real one, re-runs the first, and fixes the second forward. Never reverts. |
 | `ci-speed-hunting` · `ci-flake-hunting` | Continuous CI lanes. One mines timing to cut wall-clock latency without losing coverage. The other root-causes flakes and fixes them forward. Both exist to raise merge-queue throughput. |
 | `fast-forwarding-branches` | Keeps the primary checkout fast-forwarded on a loop, so every worktree an agent cuts starts from a current base. When the pull is blocked it alerts and changes nothing. |
 | `orchestrating-slots` | The N-slot loop that keeps a fixed number of agents working the queue. |
@@ -229,6 +230,7 @@ These are the workers the commands spawn, plus the single-lane watchers and CI h
 | `pr-comments` | workhorse | `/loop` review lane | Drives bot and human review threads to resolved, then arms auto-merge. |
 | `pr-checks` | workhorse | `/loop` CI lane | Keeps checks green and the merge queue healthy. Head-green is not queue-green. |
 | `pr-cleanup` | workhorse | `/loop` cleanup lane | Post-merge janitor. Closes issues, releases locks, reclaims local disk. |
+| `deploy-watcher` | workhorse | `/loop` deploy lane | Keeps the integration deploy green by fixing forward. Re-runs transients, opens fix PRs for real breaks, hands them to the PR lanes. |
 | `ci-speed-hunter` | workhorse | `/loop` CI-speed lane | Mines CI timing and cuts wall-clock latency without losing coverage. |
 | `ci-flake-hunter` | workhorse | `/loop` CI-flake lane | Root-causes flaky jobs and fixes them forward. Never masks. |
 | `branch-ff` | workhorse | `/loop` fast-forward lane | Keeps the primary checkout current with `pull --ff-only`. Alerts, never clobbers. |
