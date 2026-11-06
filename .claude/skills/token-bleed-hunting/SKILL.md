@@ -19,15 +19,15 @@ Project-agnostic; the adopting project defines these in its own `CLAUDE.md`.
 |---|---|
 | `<owner>/<repo>` | GitHub repository slug |
 | `<integration-branch>` | Branch fix PRs target |
-| `<telemetry-backend>` | Where OTel lands: `prometheus`, `otlp-file` (a collector's file exporter), or `sql` (ClickHouse or another SQL store behind a collector). Recipes for each in [`references/queries.md`](references/queries.md) |
-| `<telemetry-access>` | How the hunter queries it: an HTTP endpoint, a CLI, or a file path. Credentials come from the environment, never a file in the repo |
-| `<repo-filter>` | The attribute that tags this repo's sessions. Preferred: `vcs.repository.name=<repo>` (needs `OTEL_METRICS_INCLUDE_REPOSITORY=1`). Fallback: a custom `OTEL_RESOURCE_ATTRIBUTES` key such as `repo=<repo>` |
+| `<telemetry-backend>` | Where OTel lands: `prometheus` (metrics), `loki` (events), `otlp-file` (a collector's file exporter), or `sql` (ClickHouse or another SQL store behind a collector). Prometheus and Loki are often paired behind one collector. Recipes for each in [`references/queries.md`](references/queries.md) |
+| `<telemetry-access>` | How the hunter queries it: an HTTP endpoint (direct, or a Grafana datasource proxy), a CLI, or a file path. Credentials come from the environment or a mode-600 file outside the repo, never a file in the repo |
+| `<repo-filter>` | The attribute that tags this repo's sessions. Preferred: `vcs.repository.name=<repo>`, from `OTEL_METRICS_INCLUDE_REPOSITORY=1`. Fallback: a custom `OTEL_RESOURCE_ATTRIBUTES` key such as `repo=<repo>`. Backends usually turn dots into underscores (`vcs_repository_name`) |
 | `<transcript-root>` | Where this repo's session transcripts live on the machine running the lane. Absent → metrics-only, and findings carry lower confidence |
 | `<window>` | The analysis window. Default `7d` |
 | `<baseline-window>` | The comparison window before it. Default the prior `28d` |
 | `<min-sessions>` | Minimum sessions in a window before any number is trusted. Default `20` |
 
-If `<repo-filter>` is not set, the lane's first job is a PR that sets it in the repo's `.claude/settings.json` `env` block (see [`references/claude-code-telemetry.md`](references/claude-code-telemetry.md) § Setup). Without it, nothing measured can be attributed to this repo.
+If `<repo-filter>` is not set, nothing measured can be attributed to this repo, so fixing that comes first. `OTEL_METRICS_INCLUDE_REPOSITORY=1` derives the repo from git, so setting it once in user or managed settings tags every repo. Report that as the recommendation. If the operator wants it per repo instead, the lane's first job is a PR that sets it in the repo's `.claude/settings.json` `env` block (see [`references/claude-code-telemetry.md`](references/claude-code-telemetry.md) § Setup). That setup PR is exempt from `<min-sessions>` and the baseline: it enables measurement and claims no saving. Until the filter exists, scope queries to Claude Code only (`service_name="claude-code"`, or `exported_job="claude-code"` behind a collector's Prometheus exporter), mark every finding **unattributed**, and open no fix PR.
 
 ## The one rule
 
@@ -65,16 +65,20 @@ Several classes usually overlap. Rank by tokens and cost, not by how interesting
 
 Pull aggregates, never raw event streams. Every query in [`references/queries.md`](references/queries.md) returns numbers grouped by a few attributes. Run them through a cheap-tier read-only subagent and keep only the table it returns.
 
+**Never query a bare selector.** Every series and event carries user emails, account, org and session ids as labels, so a bare `claude_code_token_usage_tokens_total` or `{service_name="claude-code"}` dumps them into context. Always wrap in `sum by (…)` / `count by (…)`, or strip to the needed fields with Loki's `keep` stage before anything comes back.
+
 For `<window>` and `<baseline-window>`, filtered by `<repo-filter>`:
 
 1. **Volume.** Sessions, requests, tokens by `type` (`input`, `output`, `cacheRead`, `cacheCreation`), cost by `model`.
-2. **Normalize.** Raw totals rise with usage, so compare rates: tokens and cost per session, per active hour (`active_time.total`), and per unit of output (`commit.count`, `pull_request.count`, `lines_of_code.count`). A spend increase with flat output is a lead. A spend increase that tracks output usually isn't.
-3. **Derived metrics** (formulas in the telemetry reference): cache-hit ratio, session floor, output share, subagent share, per-tool result bytes, error and retry rate, compactions per session.
-4. **Attribution.** Group the token and cost metrics by `agent.name`, `skill.name`, `mcp_server.name` and `query_source`. A bleed that lives in one agent or one skill is a fix with a clear file to edit.
+2. **Normalize.** Raw totals rise with usage, so compare rates: tokens and cost per session, per active hour (`active_time.total`), and per unit of output (`commit.count`, `pull_request.count`, `lines_of_code.count`). A spend increase with flat output is a lead. A spend increase that tracks output usually isn't. The output counters only exist once a session commits or opens a PR. If they're absent, normalize per session and per active hour, and say so.
+3. **Derived metrics** (formulas in the telemetry reference): cache-hit ratio, session floor, output share, subagent share, per-tool result bytes, error and retry rate, compactions per session. Compute the floor per `query_source`: interactive sessions and headless SDK runs load different context and have different floors.
+4. **Attribution.** Group the token and cost metrics by `agent.name`, `skill.name`, `mcp_server.name` and `query_source`. A bleed that lives in one agent or one skill is a fix with a clear file to edit. These attribution attributes depend on the harness version. When they're absent, attribute from transcripts (which agent definition dispatched the subagent) and from `subagent_completed` events, and state the fallback.
 
 Build a ranked list: `{class, signal, window value, baseline value, tokens/window, cost/window, share of window spend}`, worst first. Re-derive the baseline from live data each tick. Usage changes, models change, the floor drifts.
 
-Fewer than `<min-sessions>` in either window → report "insufficient sample" and stop the tick. Small samples produce confident nonsense.
+Fewer than `<min-sessions>` in the window → report "insufficient sample" and stop the tick. Small samples produce confident nonsense. No baseline yet (telemetry is new) → report the window's numbers as the first baseline and open no fix PR. A fix needs something to beat.
+
+**Match the tick to the volume.** A tick costs tokens too. If the window's total spend is about the size of one tick's own cost, the lane is spending more than it can find. Say so in the report and recommend a longer interval.
 
 ## Step 2: DIAGNOSE and CONFIRM
 
@@ -142,7 +146,7 @@ The repos this lane works in may be public, and transcripts contain everything a
 - PRs, comments, reports and commit messages carry **aggregate numbers, metric and attribute names, model names, tool names, and paths of files inside this repo** (the fix's harness-config `file:line`, and a repo file that sessions re-read or that floods tool output). The PR lands in this same repo, so its readers can already see those paths. Nothing else from telemetry or transcripts.
 - Name an MCP server or tool only if this repo's own config defines it. Describe one the user configured themselves as "a user-level MCP server", without naming it.
 - Never quote prompt text, assistant text, tool input or output, file contents seen in a session, or error message bodies. Name the error type, not its message.
-- Never include identifiers: emails, account, user, organization or session ids, request ids, host paths.
+- Never include identifiers: emails, account, user, organization or session ids, request ids, host paths. When a public PR or comment quotes a query, replace user filter values with `<user-filter>` and private telemetry hostnames with `<telemetry-host>`.
 - Transcript parsing happens locally in a subagent whose return contract is numbers and tool or file names only. Its raw output never goes into a PR.
 - Never enable `OTEL_LOG_USER_PROMPTS`, `OTEL_LOG_TOOL_DETAILS`, `OTEL_LOG_TOOL_CONTENT`, `OTEL_LOG_ASSISTANT_RESPONSES` or `OTEL_LOG_RAW_API_BODIES`. The lane is designed to work without them.
 
@@ -174,9 +178,10 @@ Claude Code is the first-class target. For another harness, map its counters ont
 A token hunter that bleeds tokens is a joke nobody wants to pay for. Load the `caveman` skill.
 
 - Never pull raw metric series, event streams or transcripts into your context. Subagents run the queries and parsers and return the ranked table.
-- Cheap tier for every query and parse (`caveman:cavecrew-investigator` or a cheap-tier subagent per `MODEL-DEFAULTS.md`). Workhorse for the config edit, once you have named the exact change. Never the cheap tier for edits.
+- Cheap tier for every query and parse: the `scout` agent, or any Bash-capable subagent pinned to the cheap tier per `MODEL-DEFAULTS.md`. A code locator that only returns `file:line` tables is the wrong tool here; the job is running a query and reducing it to numbers. Workhorse for the config edit, once you have named the exact change. Never the cheap tier for edits.
+- One query per tool call, with plain `curl` and `jq`. Shell loops and multi-statement scripts are often refused by permission guards, and every refusal is a wasted round trip.
 - The tick should cost a small fraction of the bleed it finds. If telemetry reports your own lane's spend (`agent.name=token-bleed-hunter`), include it in the tick report.
-- Status line: `window 7d; 214 sessions; cache-hit 38% (base 71%); floor 41k; top=cache-busting ~1.2M tok/wk → hook timestamp → PR #x; verified #y landed`.
+- Status line, one shape everywhere: `window <w>; <n> sessions; cache-hit <x>% (base <y>%); floor <f>k; top=<class> ~<t> tok/wk → <lever> → PR #<x> (proj −<t> tok/wk); verified #<y> <verdict>`. Null forms: `base n/a`, `top=none (<reason>)`, `PR none`, `verified none`. Example: `window 7d; 214 sessions; cache-hit 38% (base 71%); floor 41k; top=cache-busting ~1.2M tok/wk → hook timestamp → PR #x (proj −1.1M tok/wk); verified #y landed`.
 
 Caveman compresses prose only. Queries, metric and attribute names, file paths and numbers stay byte-exact. Commit messages and PR bodies are normal prose through `humanizer`.
 

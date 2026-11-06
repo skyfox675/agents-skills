@@ -16,33 +16,38 @@ Prometheus holds metrics, not events. With it alone you can measure the cache-hi
 count by (__name__) ({__name__=~"claude_code.*"})
 ```
 
-The recipes below write `TOKENS` for the token counter, `COST` for the cost counter, and `SESSIONS` / `PRS` for the session and pull-request counters. Prometheus also needs cumulative counters: set `OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE=cumulative` user-side, or convert delta to cumulative in the collector. Labels lose their dots too, so `agent.name` usually becomes `agent_name`.
+A collector's Prometheus exporter typically yields `claude_code_token_usage_tokens_total` (`TOKENS` below), `claude_code_cost_usage_USD_total` (`COST`), `claude_code_session_count_total` (`SESSIONS`) and `claude_code_active_time_seconds_total`. The commit, pull-request and lines-of-code counters (`PRS`) only appear once a session has committed or opened a PR. Prometheus also needs cumulative counters: set `OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE=cumulative` user-side, or convert delta to cumulative in the collector. Labels lose their dots too, so `agent.name` becomes `agent_name`. Behind a collector, scope to Claude Code with `exported_job="claude-code"`.
+
+**`increase()` can read zero here.** With `session_id` on every series (the default), each session is its own short-lived counter. A series born inside the window at its final value has no earlier sample to increase from, so `increase()` returns 0 even though the series exist. Sum each series' last value instead:
 
 ```promql
-# Tokens by bucket over the window
-sum by (type) (increase(TOKENS{<repo-key>="<repo>"}[7d]))
+# Tokens by bucket over the window (per-session-series safe)
+sum by (type) (max_over_time(TOKENS{<repo-key>="<repo>"}[7d]))
 
 # Cache-hit ratio, window vs baseline (baseline = the 28 days before the window)
-  sum(increase(TOKENS{<repo-key>="<repo>", type="cacheRead"}[7d]))
-/ sum(increase(TOKENS{<repo-key>="<repo>", type=~"input|cacheRead|cacheCreation"}[7d]))
+  sum(max_over_time(TOKENS{<repo-key>="<repo>", type="cacheRead"}[7d]))
+/ sum(max_over_time(TOKENS{<repo-key>="<repo>", type=~"input|cacheRead|cacheCreation"}[7d]))
 
-  sum(increase(TOKENS{<repo-key>="<repo>", type="cacheRead"}[28d] offset 7d))
-/ sum(increase(TOKENS{<repo-key>="<repo>", type=~"input|cacheRead|cacheCreation"}[28d] offset 7d))
+  sum(max_over_time(TOKENS{<repo-key>="<repo>", type="cacheRead"}[28d] offset 7d))
+/ sum(max_over_time(TOKENS{<repo-key>="<repo>", type=~"input|cacheRead|cacheCreation"}[28d] offset 7d))
 
 # Cost by model and source: premium spend on subagents is the model-mismatch lead
-sort_desc(sum by (model, query_source) (increase(COST{<repo-key>="<repo>"}[7d])))
+sort_desc(sum by (model, query_source) (max_over_time(COST{<repo-key>="<repo>"}[7d])))
 
-# Cost attributed to agents, skills and MCP servers
-topk(15, sum by (agent_name, skill_name, mcp_server_name) (increase(COST{<repo-key>="<repo>"}[7d])))
+# Cost attributed to agents, skills and MCP servers (empty if your version lacks these labels)
+topk(15, sum by (agent_name, skill_name, mcp_server_name) (max_over_time(COST{<repo-key>="<repo>"}[7d])))
 
-# Tokens per session and per PR
-sum(increase(TOKENS{<repo-key>="<repo>"}[7d])) / sum(increase(SESSIONS{<repo-key>="<repo>"}[7d]))
-sum(increase(TOKENS{<repo-key>="<repo>"}[7d])) / sum(increase(PRS{<repo-key>="<repo>"}[7d]))
+# Sessions (one series per session, so count distinct session_id), then tokens per session and per PR
+count(count by (session_id) (max_over_time(SESSIONS{<repo-key>="<repo>"}[7d])))
+sum(max_over_time(TOKENS{<repo-key>="<repo>"}[7d])) / count(count by (session_id) (max_over_time(SESSIONS{<repo-key>="<repo>"}[7d])))
+sum(max_over_time(TOKENS{<repo-key>="<repo>"}[7d])) / sum(max_over_time(PRS{<repo-key>="<repo>"}[7d]))
 
 # Output share
-  sum(increase(TOKENS{<repo-key>="<repo>", type="output"}[7d]))
-/ sum(increase(TOKENS{<repo-key>="<repo>"}[7d]))
+  sum(max_over_time(TOKENS{<repo-key>="<repo>", type="output"}[7d]))
+/ sum(max_over_time(TOKENS{<repo-key>="<repo>"}[7d]))
 ```
+
+`max_over_time` overstates a session that started before the window, because its counter already held pre-window tokens. For exact windowed token math, use the Loki or SQL event recipes, which don't have this problem. If you turned `session_id` off on metrics (`OTEL_METRICS_INCLUDE_SESSION_ID=false`), the counters are long-lived and `increase()` is correct again.
 
 Run instant queries through the HTTP API so only the result vector comes back:
 
@@ -50,6 +55,51 @@ Run instant queries through the HTTP API so only the result vector comes back:
 curl -sG "$PROM_URL/api/v1/query" --data-urlencode 'query=<promql>' \
   | jq -c '.data.result[] | {m: .metric, v: .value[1]}'
 ```
+
+## Loki (events)
+
+A collector exporting logs to Loki over OTLP puts every event in one stream, typically `{service_name="claude-code"}`. Event attributes (`event_name`, `session_id`, `query_source`, the token counts) land as **structured metadata, not stream labels**. Filter them in the pipeline (`| event_name="api_request"`), not in the selector. `unwrap` takes one field per query, so pull the four token buckets with four queries.
+
+```logql
+# Event volume by type: what is this deployment emitting at all?
+sum by (event_name) (count_over_time({service_name="claude-code"} | <repo-key>="<repo>" [7d]))
+
+# Token buckets and cost by model and source (repeat unwrap for input_tokens,
+# output_tokens, cache_read_tokens, cache_creation_tokens, cost_usd)
+sum by (model, query_source) (sum_over_time(
+  {service_name="claude-code"} | event_name="api_request" | <repo-key>="<repo>" | unwrap cache_read_tokens [7d]))
+
+# Tool output bytes and failures by tool
+sum by (tool_name) (sum_over_time(
+  {service_name="claude-code"} | event_name="tool_result" | <repo-key>="<repo>" | unwrap tool_result_size_bytes [7d]))
+sum by (tool_name) (count_over_time(
+  {service_name="claude-code"} | event_name="tool_result" | success="false" | <repo-key>="<repo>" [7d]))
+
+# Churn and thrash
+sum by (status_code) (count_over_time({service_name="claude-code"} | event_name="api_error" | <repo-key>="<repo>" [7d]))
+sum by (tool_name) (count_over_time({service_name="claude-code"} | event_name="tool_decision" | decision="reject" | <repo-key>="<repo>" [7d]))
+count_over_time({service_name="claude-code"} | event_name="compaction" | <repo-key>="<repo>" [7d])
+sum by (agent_type, model) (sum_over_time(
+  {service_name="claude-code"} | event_name="subagent_completed" | <repo-key>="<repo>" | unwrap total_tokens [7d]))
+```
+
+Run instant metric queries at the window end (`/loki/api/v1/query` with `time=<end>`). Through Grafana, the datasource proxy path is `/api/datasources/proxy/uid/<loki-uid>/loki/api/v1/…`.
+
+**Session floor.** LogQL can't take each session's first request, so pull the requests stripped to five fields and reduce them locally. `keep` drops every other label (emails, ids beyond the session) and `line_format "-"` drops the body, so nothing else comes back:
+
+```bash
+curl -sG <auth> "$LOKI/loki/api/v1/query_range" \
+  --data-urlencode 'query={service_name="claude-code"} | event_name="api_request" | <repo-key>="<repo>" | query_source=~"main|repl_main_thread|sdk" | keep session_id, query_source, input_tokens, cache_read_tokens, cache_creation_tokens | line_format "-"' \
+  --data-urlencode 'direction=forward' --data-urlencode 'limit=5000' \
+  --data-urlencode "start=<lookback-start-ns>" --data-urlencode "end=<window-end-ns>" \
+| jq -c --arg since <window-start-ns> '[.data.result[] | .stream as $s | .values[]
+    | {ts: .[0], s: $s.session_id, src: $s.query_source,
+       f: ([$s.input_tokens, $s.cache_read_tokens, $s.cache_creation_tokens] | map(tonumber) | add)}]
+  | group_by(.s) | map(min_by(.ts)) | map(select(.ts >= $since))
+  | group_by(.src) | map({src: .[0].src, sessions: length, floor_p50: (map(.f) | sort | .[length/2|floor])})'
+```
+
+Start the pull a day before the window (`<lookback-start-ns>`) so a session's true first request is found, then keep only sessions that started in the window. Timestamps are nanosecond strings of equal length, so they compare correctly as strings. If a window holds more than `limit` requests, page by advancing `start` past the last timestamp returned. The output is one row per `query_source`, numbers only.
 
 ## OTLP file export (collector `file` exporter)
 
@@ -100,7 +150,7 @@ def total(f): map(f) | add // 0;
 | ($win | map(select(.ev == "api_request"))) as $req
 | ($win | map(select(.ev == "tool_result"))) as $tr
 # Floor: each session's first main-thread request ever, kept only if the session started in the window.
-| ($all | map(select(.ev == "api_request" and .src == "main")) | group_by(.session)
+| ($all | map(select(.ev == "api_request" and ((.src // "") | test("^(main|repl_main_thread)$")))) | group_by(.session)
     | map(min_by(.ts) | select(.ts >= $since and .ts < $until) | .input + .cread + .cwrite)
     | sort) as $floors
 | {
@@ -172,7 +222,7 @@ FROM (
          + toUInt64OrZero(LogAttributes['cache_creation_tokens']), Timestamp) AS floor_tokens
   FROM otel_logs
   WHERE match(LogAttributes['event.name'], 'api_request$')
-    AND LogAttributes['query_source'] = 'main'
+    AND LogAttributes['query_source'] IN ('main', 'repl_main_thread')
     AND if(LogAttributes['<repo-key>'] != '', LogAttributes['<repo-key>'], ResourceAttributes['<repo-key>']) = '<repo>'
     AND Timestamp >= parseDateTimeBestEffort('<since>') - INTERVAL 1 DAY
   GROUP BY s
@@ -240,7 +290,7 @@ FROM (
       Timestamp) AS gap_s
   FROM otel_logs
   WHERE match(LogAttributes['event.name'], 'api_request$')
-    AND LogAttributes['query_source'] = 'main'
+    AND LogAttributes['query_source'] IN ('main', 'repl_main_thread')
     AND if(LogAttributes['<repo-key>'] != '', LogAttributes['<repo-key>'], ResourceAttributes['<repo-key>']) = '<repo>'
     AND Timestamp >= parseDateTimeBestEffort('<since>')
 );

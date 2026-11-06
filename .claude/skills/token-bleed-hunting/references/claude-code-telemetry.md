@@ -6,7 +6,7 @@ What Claude Code emits over OpenTelemetry, which parts the hunt uses, and the de
 
 Telemetry is off until `CLAUDE_CODE_ENABLE_TELEMETRY=1`. The exporter, endpoint and credentials are per-user or per-org infrastructure. They belong in the user's environment, user settings or managed settings, **never in a committed repo file**.
 
-What a repo may commit, in `.claude/settings.json`, is the part that tags its sessions:
+Repo tagging works best user-side too: `OTEL_METRICS_INCLUDE_REPOSITORY=1` in user or managed settings derives the repo from git and tags every repo at once. If the operator wants it per repo, a repo may commit the tag in `.claude/settings.json`:
 
 ```json
 {
@@ -16,7 +16,7 @@ What a repo may commit, in `.claude/settings.json`, is the part that tags its se
 }
 ```
 
-That adds `vcs.repository.name`, `vcs.owner.name`, `vcs.repository.url.full` and `vcs.provider.name` to metrics. Recent versions only, and it's off by default. Confirm that events carry these attributes in your version too. If they don't, or if you need a tag the harness doesn't derive, use `OTEL_RESOURCE_ATTRIBUTES` (`key=value,key=value`, no spaces, percent-encode special characters). A project-level `OTEL_RESOURCE_ATTRIBUTES` replaces a user-level one rather than merging with it, so check with the user before committing it.
+That adds `vcs.repository.name`, `vcs.owner.name`, `vcs.repository.url.full` and `vcs.provider.name` to metrics. Recent versions only, and it's off by default. Confirm that events carry these attributes in your version too. If metrics carry them but events don't, attribute from metrics and treat event-only numbers (floor, tool bytes, compactions) as user-wide until a tag reaches events. For a tag that does reach events, or one the harness doesn't derive, use `OTEL_RESOURCE_ATTRIBUTES` (`key=value,key=value`, no spaces, percent-encode special characters). A project-level `OTEL_RESOURCE_ATTRIBUTES` replaces a user-level one rather than merging with it, so check with the user before committing it.
 
 User-side settings the lane assumes:
 
@@ -47,9 +47,26 @@ Content logging (`OTEL_LOG_USER_PROMPTS`, `OTEL_LOG_TOOL_DETAILS`, `OTEL_LOG_TOO
 
 `input` excludes cache tokens. The four `type` buckets are disjoint, and their sum is the full prompt plus output.
 
+The attribution attributes (`agent.name`, `skill.name`, `plugin.name`, `mcp_server.name`, `mcp_tool.name`) depend on the harness version and may be missing entirely. Check before you build a query on them.
+
+Most backends turn dots into underscores, so a collector's Prometheus exporter typically exposes `claude_code_token_usage_tokens_total`, `claude_code_cost_usage_USD_total` (the unit suffix keeps its case), `claude_code_session_count_total` and `claude_code_active_time_seconds_total`, with labels such as `session_id`, `query_source` and `user_name`. Discover the names rather than assuming them (recipe in [`queries.md`](queries.md)).
+
+### `query_source` values
+
+The docs list `main`, `subagent` and `auxiliary`, but events carry finer values, and metrics and events can disagree in the same deployment:
+
+| Value seen | Meaning | Counts as "main" for the floor? |
+|---|---|---|
+| `main` (metrics), `repl_main_thread` (events) | The interactive main conversation | yes |
+| `sdk` | A headless or SDK-driven run (`claude -p`, Agent SDK) | separately: it has its own floor |
+| `subagent` | A subagent's requests | no |
+| `auxiliary`, `generate_session_title` and similar | Harness helper calls | no |
+
+Group by `query_source` once, see which values your version emits, and set the floor's "main" match from that (for example `main|repl_main_thread`).
+
 ## Events the hunt uses
 
-Every event carries `event.name`, `event.timestamp`, `event.sequence` and the standard attributes. `prompt.id` ties every event from one user prompt together. `agent_id` and `parent_agent_id` tie subagent events to their parent.
+Every event carries `event.name`, `event.timestamp`, `event.sequence` and the standard attributes. In Loki and most SQL stores fed by a collector they arrive as `event_name`, `session_id` and so on. `prompt.id` ties every event from one user prompt together. `agent_id` and `parent_agent_id` tie subagent events to their parent.
 
 | Event | Attributes used |
 |---|---|
@@ -74,7 +91,7 @@ Compute these for both `<window>` and `<baseline-window>`. Per-day or per-sessio
 |---|---|---|
 | Cache-hit ratio | `cacheRead / (input + cacheRead + cacheCreation)` | cache-busting, idle-gap rewrites |
 | Write-to-read ratio | `cacheCreation / cacheRead` | same; more sensitive at high hit ratios |
-| Session floor | p50 and p90 over sessions of `input + cache_read + cache_creation` on the **first** `api_request` with `query_source=main`, counting only sessions that started inside the window | always-loaded bloat |
+| Session floor | p50 and p90 over sessions of `input + cache_read + cache_creation` on the **first** `api_request` from the main thread (see `query_source` values above), counting only sessions that started inside the window. Report interactive and `sdk` floors separately | always-loaded bloat |
 | Tokens per session | all four buckets ÷ `session.count` | overall trend |
 | Tokens per PR / commit | all four buckets ÷ `pull_request.count` (or `commit.count`) | spend not buying output |
 | Output share | `output / all four buckets`, and output tokens per request | verbose output |
