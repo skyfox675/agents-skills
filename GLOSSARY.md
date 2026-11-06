@@ -50,11 +50,11 @@ A hunter loops like a watcher, but it goes looking for problems nobody reported.
 
 That is the entire difference. A watcher reacts to a queue. A hunter mines history for a pattern, roots it out, and proves it is dead. The loop is always the same shape: mine the data, diagnose the mechanism, prove the fix is safe, fix forward, verify, repeat.
 
-A hunt never finishes. New slowness and new flakes keep appearing as the test suite grows, so the lane is permanent rather than a one-time sweep. Both hunters are singletons: run two and they collide on the same files and double-spend CI minutes re-measuring the same jobs.
+A hunt never finishes. New slowness, new flakes and new bleed keep appearing as the code and the agent config grow, so the lane is permanent rather than a one-time sweep. Every hunter is a singleton: run two and they collide on the same files and double-spend the same expensive measurements.
 
-**Fix forward** is the rule underneath both hunters. You fix the cause. You do not mask it. No skipped test, no bumped retry count, no gate quietly dropped from the required list.
+**Fix forward** is the rule underneath every hunter. You fix the cause. You do not mask it. No skipped test, no bumped retry count, no gate quietly dropped from the required list, no instruction deleted because it was long.
 
-The two hunters are `ci-speed-hunter` and `ci-flake-hunter`, and they are strictly disjoint. See below.
+The two CI hunters are `ci-speed-hunter` and `ci-flake-hunter`, and they are strictly disjoint. See below. The third hunter, `token-bleed-hunter`, works on agent sessions rather than CI.
 
 ## ci-speed
 
@@ -85,6 +85,20 @@ Flakes are worth hunting because of the merge queue. When a flaky speculative bu
 The fix is always forward: reproduce it harsher than CI until it fails on demand, name the actual race, repair the test or the component, then prove it dead by running it many times over. Masking it (a skip, a bare sleep, a retry bump, a widened assertion) leaves the bug alive and hides the evidence.
 
 See `ci-flake-hunting`.
+
+## token bleed
+
+Tokens an agent session spends that buy no work. A cache prefix rewritten when it could have been read. A 200 KB test log the agent skims for one line. A top-tier model listing files. A permission prompt re-asked every session. A session that compacts, then re-reads everything it just forgot.
+
+It is not "a lot of tokens". A hard task that spends heavily and spends well is not bleed. The test is whether the same work could have been done with fewer tokens at the same capability.
+
+Bleed in the shared layer (the always-loaded instructions, the tool definitions, the agent and skill config) is worth hunting for the same reason a CI long pole is: every session pays it, every time, until someone fixes the file that causes it.
+
+The hard rule: **cut waste, never work.** Deleting an instruction that encodes a real constraint, dropping a tool the sessions still use, or putting reasoning work on a cheaper model is not a token fix. That is a capability cut wearing a savings costume, and it costs more later than it saved.
+
+The `token-bleed-hunter` lane mines OpenTelemetry metrics and session transcripts, fixes the cause in harness config only, and checks after merge that the saving actually showed up. It never edits application code and never quotes what a user typed.
+
+See `token-bleed-hunting`.
 
 ## The three CI lanes, side by side
 
