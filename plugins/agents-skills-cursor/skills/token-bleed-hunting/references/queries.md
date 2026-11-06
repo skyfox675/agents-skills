@@ -4,6 +4,15 @@ Aggregate queries for the derived metrics in [`claude-code-telemetry.md`](claude
 
 Placeholders: `<repo-key>` / `<repo>` is the `<repo-filter>` attribute and value; `<since>` is the window start as ISO 8601 UTC.
 
+**For Prometheus and Loki, use the helper.** [`../scripts/telemetry-query.sh`](../scripts/telemetry-query.sh) runs one query per call with plain `curl` and `jq`, prints only grouping labels and values, refuses any query not wrapped in an aggregation, and implements the Loki session floor below as its `floor` mode. Auth comes from a curl config file named in `TELEMETRY_CURLRC`. The raw recipes below are for other backends and for reading what the helper does.
+
+```bash
+export PROM_URL=<prometheus-api-base> LOKI_URL=<loki-api-base> TELEMETRY_CURLRC=<mode-600-curl-config>
+telemetry-query.sh prom  'sum by (type) (max_over_time(claude_code_token_usage_tokens_total{<repo-key>="<repo>"}[7d]))'
+telemetry-query.sh loki  'sum by (query_source) (count_over_time({service_name="claude-code"} | event_name="api_request" | <repo-key>="<repo>" [7d]))'
+telemetry-query.sh floor '{service_name="claude-code"} | event_name="api_request" | <repo-key>="<repo>"' <window-start-unix>
+```
+
 **Prefer events over metrics for token math.** `api_request` events carry all four token buckets, the model, the source and the cost in one record, and they don't depend on counter temporality. Use metrics where events aren't collected, and for the per-PR and per-commit counts.
 
 ## Prometheus (metrics only)
@@ -95,11 +104,11 @@ curl -sG <auth> "$LOKI/loki/api/v1/query_range" \
 | jq -c --arg since <window-start-ns> '[.data.result[] | .stream as $s | .values[]
     | {ts: .[0], s: $s.session_id, src: $s.query_source,
        f: ([$s.input_tokens, $s.cache_read_tokens, $s.cache_creation_tokens] | map(tonumber) | add)}]
-  | group_by(.s) | map(min_by(.ts)) | map(select(.ts >= $since))
+  | group_by([.s, .src]) | map(min_by(.ts)) | map(select(.ts >= $since))
   | group_by(.src) | map({src: .[0].src, sessions: length, floor_p50: (map(.f) | sort | .[length/2|floor])})'
 ```
 
-Start the pull a day before the window (`<lookback-start-ns>`) so a session's true first request is found, then keep only sessions that started in the window. Timestamps are nanosecond strings of equal length, so they compare correctly as strings. If a window holds more than `limit` requests, page by advancing `start` past the last timestamp returned. The output is one row per `query_source`, numbers only.
+Start the pull a day before the window (`<lookback-start-ns>`) so a session's true first request is found, then keep only sessions that started in the window. Group by session **and** source: interactive sessions often open with a title-generation call, and grouping by session alone files the whole session under that helper's source. Timestamps are nanosecond strings of equal length, so they compare correctly as strings. If a window holds more than `limit` requests, page by advancing `start` past the last timestamp returned. The output is one row per `query_source`, numbers only.
 
 ## OTLP file export (collector `file` exporter)
 
@@ -181,7 +190,7 @@ Window bounds are compared as strings, so pass them in the same ISO 8601 UTC for
 
 ## SQL: ClickHouse via the collector's `clickhouse` exporter
 
-These queries assume the exporter's default tables: `otel_logs` (`Timestamp`, `Body`, `ResourceAttributes` and `LogAttributes` as `Map(String, String)`) and `otel_metrics_sum` (`MetricName`, `Attributes`, `ResourceAttributes`, `Value`, `TimeUnix`). They haven't been run against a live store, so check the table and column names against your schema first. Other SQL stores need the same logic with their own map-access syntax.
+These queries assume the exporter's default tables: `otel_logs` (`Timestamp`, `Body`, `ResourceAttributes` and `LogAttributes` as `Map(String, String)`) and `otel_metrics_sum` (`MetricName`, `Attributes`, `ResourceAttributes`, `Value`, `TimeUnix`). They were verified with `clickhouse local` (ClickHouse 25.8) against synthetic rows in that schema, covering a session that started before the window, an idle-gap rewrite, another repo's traffic, and a failing tool call. Exporter versions rename columns now and then, so check the names against your tables first. Other SQL stores need the same logic with their own map-access syntax.
 
 Attributes can land in `LogAttributes` or `ResourceAttributes` depending on the version and on how the repo tag was set. The `if(LogAttributes[…] != '', …, ResourceAttributes[…])` filter below checks both.
 

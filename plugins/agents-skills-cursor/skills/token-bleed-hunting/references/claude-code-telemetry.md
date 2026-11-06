@@ -16,7 +16,7 @@ Repo tagging works best user-side too: `OTEL_METRICS_INCLUDE_REPOSITORY=1` in us
 }
 ```
 
-That adds `vcs.repository.name`, `vcs.owner.name`, `vcs.repository.url.full` and `vcs.provider.name` to metrics. Recent versions only, and it's off by default. Confirm that events carry these attributes in your version too. If metrics carry them but events don't, attribute from metrics and treat event-only numbers (floor, tool bytes, compactions) as user-wide until a tag reaches events. For a tag that does reach events, or one the harness doesn't derive, use `OTEL_RESOURCE_ATTRIBUTES` (`key=value,key=value`, no spaces, percent-encode special characters). A project-level `OTEL_RESOURCE_ATTRIBUTES` replaces a user-level one rather than merging with it, so check with the user before committing it.
+That adds `vcs.repository.name`, `vcs.owner.name`, `vcs.repository.url.full` and `vcs.provider.name` to metrics. Recent versions only, and it's off by default. Current versions put the same attributes on events too. Confirm yours does with `sum by (vcs_repository_name) (count_over_time({service_name="claude-code"} | event_name="api_request" [1h]))` in Loki, or the equivalent in your store. Sessions that started before the flag was set stay untagged. If metrics carry them but events don't, attribute from metrics and treat event-only numbers (floor, tool bytes, compactions) as user-wide until a tag reaches events. For a tag that does reach events, or one the harness doesn't derive, use `OTEL_RESOURCE_ATTRIBUTES` (`key=value,key=value`, no spaces, percent-encode special characters). A project-level `OTEL_RESOURCE_ATTRIBUTES` replaces a user-level one rather than merging with it, so check with the user before committing it.
 
 User-side settings the lane assumes:
 

@@ -179,7 +179,7 @@ A token hunter that bleeds tokens is a joke nobody wants to pay for. Load the `c
 
 - Never pull raw metric series, event streams or transcripts into your context. Subagents run the queries and parsers and return the ranked table.
 - Cheap tier for every query and parse: the `scout` agent, or any Bash-capable subagent pinned to the cheap tier per `MODEL-DEFAULTS.md`. A code locator that only returns `file:line` tables is the wrong tool here; the job is running a query and reducing it to numbers. Workhorse for the config edit, once you have named the exact change. Never the cheap tier for edits.
-- One query per tool call, with plain `curl` and `jq`. Shell loops and multi-statement scripts are often refused by permission guards, and every refusal is a wasted round trip.
+- One query per tool call. For Prometheus and Loki use [`scripts/telemetry-query.sh`](scripts/telemetry-query.sh), which returns numbers only and refuses bare selectors. Shell loops and multi-statement scripts are often refused by permission guards, and every refusal is a wasted round trip.
 - The tick should cost a small fraction of the bleed it finds. If telemetry reports your own lane's spend (`agent.name=token-bleed-hunter`), include it in the tick report.
 - Status line, one shape everywhere: `window <w>; <n> sessions; cache-hit <x>% (base <y>%); floor <f>k; top=<class> ~<t> tok/wk → <lever> → PR #<x> (proj −<t> tok/wk); verified #<y> <verdict>`. Null forms: `base n/a`, `top=none (<reason>)`, `PR none`, `verified none`. Example: `window 7d; 214 sessions; cache-hit 38% (base 71%); floor 41k; top=cache-busting ~1.2M tok/wk → hook timestamp → PR #x (proj −1.1M tok/wk); verified #y landed`.
 
