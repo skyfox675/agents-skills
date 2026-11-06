@@ -192,6 +192,7 @@ These power the commands above, plus the `/loop` watcher and CI-hunter lanes, so
 | `pr-comments` · `pr-checks` · `pr-cleanup` | Single-lane interval watchers. One drives review threads to resolved and arms auto-merge, one keeps CI green and the merge queue healthy, one tidies up after PRs close. |
 | `deploy-watching` | Interval watcher for the integration environment's deploy. Tells a transient red from a real one, re-runs the first, and fixes the second forward. Never reverts. |
 | `ci-speed-hunting` · `ci-flake-hunting` | Continuous CI lanes. One mines timing to cut wall-clock latency without losing coverage. The other root-causes flakes and fixes them forward. Both exist to raise merge-queue throughput. |
+| `token-bleed-hunting` | Continuous token-efficiency lane. Mines OpenTelemetry metrics and session transcripts for tokens agent sessions waste, then fixes the cause in the repo's harness config, never by cutting capability. Every fix records a baseline, and a later tick checks that the saving actually showed up. |
 | `fast-forwarding-branches` | Keeps the primary checkout fast-forwarded on a loop, so every worktree an agent cuts starts from a current base. When the pull is blocked it alerts and changes nothing. |
 | `orchestrating-slots` | The N-slot loop that keeps a fixed number of agents working the queue. |
 | `gh-issue-filing` · `jira-issue-filing` | How to write a ticket an agent can build without asking a single follow-up question. |
@@ -233,6 +234,7 @@ These are the workers the commands spawn, plus the single-lane watchers and CI h
 | `deploy-watcher` | workhorse | `/loop` deploy lane | Keeps the integration deploy green by fixing forward. Re-runs transients, opens fix PRs for real breaks, hands them to the PR lanes. |
 | `ci-speed-hunter` | workhorse | `/loop` CI-speed lane | Mines CI timing and cuts wall-clock latency without losing coverage. |
 | `ci-flake-hunter` | workhorse | `/loop` CI-flake lane | Root-causes flaky jobs and fixes them forward. Never masks. |
+| `token-bleed-hunter` | workhorse | `/loop` token lane | Finds token bleed in agent sessions from OTel and transcripts, fixes it in harness config, and verifies the saving after merge. |
 | `branch-ff` | workhorse | `/loop` fast-forward lane | Keeps the primary checkout current with `pull --ff-only`. Alerts, never clobbers. |
 | `diagnostician` | workhorse | `use-aws`, `use-chrome`, recon | Read-only AWS and browser repro that returns evidence. |
 | `verifier` | workhorse | dispatch, recon, spelunking | Verify-then-trust gate. Trusts no claim unchecked. |
@@ -272,7 +274,7 @@ To install, run `sh hooks/install.sh`, which points `core.hooksPath` at `hooks/`
 
 ## Going deeper
 
-- [`GLOSSARY.md`](GLOSSARY.md) defines the words this repo uses in a specific way: slot, dispatcher, watcher, hunting, ci-speed, flake. Read it first if the lane names look interchangeable, because they are not.
+- [`GLOSSARY.md`](GLOSSARY.md) defines the words this repo uses in a specific way: slot, dispatcher, watcher, hunting, ci-speed, flake, token bleed. Read it first if the lane names look interchangeable, because they are not.
 - [`MODEL-DEFAULTS.md`](MODEL-DEFAULTS.md) covers which model each task uses, per platform, and how to save tokens.
 - [`CLAUDE.md`](CLAUDE.md) and [`AGENTS.md`](AGENTS.md) cover the conventions, the model policy, and how the five tools stay in sync.
 - [`.claude/skills/`](.claude/skills) holds every skill. The pointer skills list their own install steps.

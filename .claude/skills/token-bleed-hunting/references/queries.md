@@ -1,0 +1,261 @@
+# Query recipes
+
+Aggregate queries for the derived metrics in [`claude-code-telemetry.md`](claude-code-telemetry.md), one section per `<telemetry-backend>`. Every recipe returns grouped numbers, never raw events. Run them from a cheap-tier subagent and keep only the result table.
+
+Placeholders: `<repo-key>` / `<repo>` is the `<repo-filter>` attribute and value; `<since>` is the window start as ISO 8601 UTC.
+
+**Prefer events over metrics for token math.** `api_request` events carry all four token buckets, the model, the source and the cost in one record, and they don't depend on counter temporality. Use metrics where events aren't collected, and for the per-PR and per-commit counts.
+
+## Prometheus (metrics only)
+
+Prometheus holds metrics, not events. With it alone you can measure the cache-hit ratio, tokens per session and per PR, cost by model, source, agent and skill, and output share. The session floor, tool result sizes, compactions and error rates need a logs backend too.
+
+**Find the real metric names first.** Exporters translate names (dots to underscores, and sometimes unit and `_total` suffixes), and the Claude Code docs don't fix the result. Discover the names and substitute them into the recipes:
+
+```promql
+count by (__name__) ({__name__=~"claude_code.*"})
+```
+
+The recipes below write `TOKENS` for the token counter, `COST` for the cost counter, and `SESSIONS` / `PRS` for the session and pull-request counters. Prometheus also needs cumulative counters: set `OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE=cumulative` user-side, or convert delta to cumulative in the collector. Labels lose their dots too, so `agent.name` usually becomes `agent_name`.
+
+```promql
+# Tokens by bucket over the window
+sum by (type) (increase(TOKENS{<repo-key>="<repo>"}[7d]))
+
+# Cache-hit ratio, window vs baseline (baseline = the 28 days before the window)
+  sum(increase(TOKENS{<repo-key>="<repo>", type="cacheRead"}[7d]))
+/ sum(increase(TOKENS{<repo-key>="<repo>", type=~"input|cacheRead|cacheCreation"}[7d]))
+
+  sum(increase(TOKENS{<repo-key>="<repo>", type="cacheRead"}[28d] offset 7d))
+/ sum(increase(TOKENS{<repo-key>="<repo>", type=~"input|cacheRead|cacheCreation"}[28d] offset 7d))
+
+# Cost by model and source: premium spend on subagents is the model-mismatch lead
+sort_desc(sum by (model, query_source) (increase(COST{<repo-key>="<repo>"}[7d])))
+
+# Cost attributed to agents, skills and MCP servers
+topk(15, sum by (agent_name, skill_name, mcp_server_name) (increase(COST{<repo-key>="<repo>"}[7d])))
+
+# Tokens per session and per PR
+sum(increase(TOKENS{<repo-key>="<repo>"}[7d])) / sum(increase(SESSIONS{<repo-key>="<repo>"}[7d]))
+sum(increase(TOKENS{<repo-key>="<repo>"}[7d])) / sum(increase(PRS{<repo-key>="<repo>"}[7d]))
+
+# Output share
+  sum(increase(TOKENS{<repo-key>="<repo>", type="output"}[7d]))
+/ sum(increase(TOKENS{<repo-key>="<repo>"}[7d]))
+```
+
+Run instant queries through the HTTP API so only the result vector comes back:
+
+```bash
+curl -sG "$PROM_URL/api/v1/query" --data-urlencode 'query=<promql>' \
+  | jq -c '.data.result[] | {m: .metric, v: .value[1]}'
+```
+
+## OTLP file export (collector `file` exporter)
+
+Claude Code has no file exporter of its own. Point it at an OpenTelemetry Collector that writes both signals to disk:
+
+```yaml
+receivers:
+  otlp:
+    protocols: { grpc: {}, http: {} }
+exporters:
+  file:
+    path: /var/lib/otelcol/claude-code.jsonl
+    rotation: { max_megabytes: 100, max_backups: 20 }
+service:
+  pipelines:
+    metrics: { receivers: [otlp], exporters: [file] }
+    logs:    { receivers: [otlp], exporters: [file] }
+```
+
+Each line is one export batch in OTLP JSON. Attribute values arrive as `{"stringValue": …}`, `{"intValue": "…"}` or `{"doubleValue": …}`. Integers come as strings, so convert before summing.
+
+**Step 1: flatten events** to one compact record per event, filtered to the repo. Save as `events.jq`:
+
+```jq
+def kv: (. // []) | map({(.key): (.value | to_entries[0].value)}) | add // {};
+def n: (. // 0) | tonumber;
+.resourceLogs[]?
+| (.resource.attributes | kv) as $res
+| .scopeLogs[]?.logRecords[]?
+| (.attributes | kv) as $a
+| select(($res[$rk] // $a[$rk]) == $rv)
+| ($a["event.name"] // .body.stringValue // "" | sub("^claude_code\\."; "")) as $ev
+| {ev: $ev,
+   ts: ($a["event.timestamp"] // (.timeUnixNano // "0" | tonumber / 1e9 | floor | todate)),
+   session: ($a["session.id"] // $res["session.id"]),
+   model: $a.model, src: $a.query_source, tool: $a.tool_name, ok: ($a.success | tostring),
+   input: ($a.input_tokens | n), output: ($a.output_tokens | n),
+   cread: ($a.cache_read_tokens | n), cwrite: ($a.cache_creation_tokens | n),
+   cost: ($a.cost_usd | n), result_bytes: ($a.tool_result_size_bytes | n)}
+```
+
+**Step 2: roll up** one window, `[$since, $until)`, to the derived metrics. Save as `rollup.jq`:
+
+```jq
+def total(f): map(f) | add // 0;
+. as $all
+| map(select(.ts >= $since and .ts < $until)) as $win
+| ($win | map(select(.ev == "api_request"))) as $req
+| ($win | map(select(.ev == "tool_result"))) as $tr
+# Floor: each session's first main-thread request ever, kept only if the session started in the window.
+| ($all | map(select(.ev == "api_request" and .src == "main")) | group_by(.session)
+    | map(min_by(.ts) | select(.ts >= $since and .ts < $until) | .input + .cread + .cwrite)
+    | sort) as $floors
+| {
+    sessions: ($req | map(.session) | unique | length),
+    requests: ($req | length),
+    tokens: {input: ($req | total(.input)), output: ($req | total(.output)),
+             cacheRead: ($req | total(.cread)), cacheCreation: ($req | total(.cwrite))},
+    cache_hit_ratio: (($req | total(.cread)) / ([($req | total(.input + .cread + .cwrite)), 1] | max) * 1000 | round / 1000),
+    floor_sessions: ($floors | length),
+    floor_p50: ($floors[($floors | length) / 2 | floor] // 0),
+    cost_by_model_source: ($req | group_by([.model, .src])
+      | map({key: "\(.[0].model)/\(.[0].src)", value: (total(.cost) * 100 | round / 100)}) | from_entries),
+    tools: ($tr | group_by(.tool)
+      | map({key: .[0].tool, value: {calls: length, failed: (map(select(.ok == "false")) | length),
+                                     result_bytes: total(.result_bytes)}}) | from_entries)
+  }
+```
+
+Flatten once, then roll up the window and the baseline from the same records. Feed the rollup everything retained, not only the window: the floor needs to see a session's true first request, so a session that started before `$since` doesn't count its mid-session prefix as a floor.
+
+```bash
+jq -c --arg rk <repo-key> --arg rv <repo> -f events.jq /var/lib/otelcol/claude-code*.jsonl > events.ndjson
+jq -s --arg since <window-start> --arg until <now> -f rollup.jq events.ndjson
+jq -s --arg since <baseline-start> --arg until <window-start> -f rollup.jq events.ndjson
+```
+
+Window bounds are compared as strings, so pass them in the same ISO 8601 UTC form `event.timestamp` uses, such as `2026-01-01T00:00:00.000Z`. Records without `event.timestamp` fall back to the record's `timeUnixNano`. The flattened records hold no prompt text or tool input, but they do hold session ids, so keep `events.ndjson` in the job temp dir and delete it after the tick.
+
+## SQL: ClickHouse via the collector's `clickhouse` exporter
+
+These queries assume the exporter's default tables: `otel_logs` (`Timestamp`, `Body`, `ResourceAttributes` and `LogAttributes` as `Map(String, String)`) and `otel_metrics_sum` (`MetricName`, `Attributes`, `ResourceAttributes`, `Value`, `TimeUnix`). They haven't been run against a live store, so check the table and column names against your schema first. Other SQL stores need the same logic with their own map-access syntax.
+
+Attributes can land in `LogAttributes` or `ResourceAttributes` depending on the version and on how the repo tag was set. The `if(LogAttributes[…] != '', …, ResourceAttributes[…])` filter below checks both.
+
+```sql
+-- Window token buckets, cache-hit ratio and cost by model and source
+WITH
+  if(LogAttributes['<repo-key>'] != '', LogAttributes['<repo-key>'], ResourceAttributes['<repo-key>']) AS repo
+SELECT
+  LogAttributes['model']        AS model,
+  LogAttributes['query_source'] AS src,
+  count()                                                  AS requests,
+  sum(toUInt64OrZero(LogAttributes['input_tokens']))          AS input,
+  sum(toUInt64OrZero(LogAttributes['output_tokens']))         AS output,
+  sum(toUInt64OrZero(LogAttributes['cache_read_tokens']))     AS cache_read,
+  sum(toUInt64OrZero(LogAttributes['cache_creation_tokens'])) AS cache_write,
+  round(cache_read / greatest(input + cache_read + cache_write, 1), 3) AS cache_hit_ratio,
+  round(sum(toFloat64OrZero(LogAttributes['cost_usd'])), 2)  AS cost_usd
+FROM otel_logs
+WHERE match(LogAttributes['event.name'], 'api_request$')
+  AND repo = '<repo>'
+  AND Timestamp >= parseDateTimeBestEffort('<since>')
+GROUP BY model, src
+ORDER BY cost_usd DESC;
+
+-- Session floor: prompt-side tokens on each session's first main-thread request.
+-- Scan a day before the window so a session's true first request is found, then keep
+-- only sessions that started inside the window.
+SELECT
+  count()                           AS sessions,
+  quantileExact(0.5)(floor_tokens)  AS floor_p50,
+  quantileExact(0.9)(floor_tokens)  AS floor_p90
+FROM (
+  SELECT
+    LogAttributes['session.id'] AS s,
+    min(Timestamp)              AS started,
+    argMin(toUInt64OrZero(LogAttributes['input_tokens'])
+         + toUInt64OrZero(LogAttributes['cache_read_tokens'])
+         + toUInt64OrZero(LogAttributes['cache_creation_tokens']), Timestamp) AS floor_tokens
+  FROM otel_logs
+  WHERE match(LogAttributes['event.name'], 'api_request$')
+    AND LogAttributes['query_source'] = 'main'
+    AND if(LogAttributes['<repo-key>'] != '', LogAttributes['<repo-key>'], ResourceAttributes['<repo-key>']) = '<repo>'
+    AND Timestamp >= parseDateTimeBestEffort('<since>') - INTERVAL 1 DAY
+  GROUP BY s
+  HAVING started >= parseDateTimeBestEffort('<since>')
+);
+
+-- Tool output and failures by tool
+SELECT
+  LogAttributes['tool_name'] AS tool,
+  count() AS calls,
+  countIf(LogAttributes['success'] = 'false') AS failed,
+  sum(toUInt64OrZero(LogAttributes['tool_result_size_bytes'])) AS result_bytes,
+  quantileExact(0.9)(toUInt64OrZero(LogAttributes['tool_result_size_bytes'])) AS result_bytes_p90
+FROM otel_logs
+WHERE match(LogAttributes['event.name'], 'tool_result$')
+  AND if(LogAttributes['<repo-key>'] != '', LogAttributes['<repo-key>'], ResourceAttributes['<repo-key>']) = '<repo>'
+  AND Timestamp >= parseDateTimeBestEffort('<since>')
+GROUP BY tool
+ORDER BY result_bytes DESC
+LIMIT 15;
+
+-- Churn: API errors by status and retry attempt, and repeated permission rejects
+SELECT LogAttributes['status_code'] AS status, LogAttributes['attempt'] AS attempt, count() AS n
+FROM otel_logs
+WHERE match(LogAttributes['event.name'], 'api_error$')
+  AND if(LogAttributes['<repo-key>'] != '', LogAttributes['<repo-key>'], ResourceAttributes['<repo-key>']) = '<repo>'
+  AND Timestamp >= parseDateTimeBestEffort('<since>')
+GROUP BY status, attempt ORDER BY n DESC;
+
+SELECT LogAttributes['tool_name'] AS tool, count() AS rejects, uniqExact(LogAttributes['session.id']) AS sessions
+FROM otel_logs
+WHERE match(LogAttributes['event.name'], 'tool_decision$')
+  AND LogAttributes['decision'] = 'reject'
+  AND if(LogAttributes['<repo-key>'] != '', LogAttributes['<repo-key>'], ResourceAttributes['<repo-key>']) = '<repo>'
+  AND Timestamp >= parseDateTimeBestEffort('<since>')
+GROUP BY tool ORDER BY rejects DESC LIMIT 15;
+
+-- Compactions per session, and subagent spend by agent type
+SELECT
+  countIf(match(LogAttributes['event.name'], 'compaction$')) / greatest(uniqExact(LogAttributes['session.id']), 1) AS compactions_per_session
+FROM otel_logs
+WHERE if(LogAttributes['<repo-key>'] != '', LogAttributes['<repo-key>'], ResourceAttributes['<repo-key>']) = '<repo>'
+  AND Timestamp >= parseDateTimeBestEffort('<since>');
+
+SELECT LogAttributes['agent_type'] AS agent_type, LogAttributes['model'] AS model,
+       count() AS runs, sum(toUInt64OrZero(LogAttributes['total_tokens'])) AS tokens
+FROM otel_logs
+WHERE match(LogAttributes['event.name'], 'subagent_completed$')
+  AND if(LogAttributes['<repo-key>'] != '', LogAttributes['<repo-key>'], ResourceAttributes['<repo-key>']) = '<repo>'
+  AND Timestamp >= parseDateTimeBestEffort('<since>')
+GROUP BY agent_type, model ORDER BY tokens DESC;
+
+-- Idle-gap rewrites: requests after a gap longer than the cache TTL (<ttl> seconds:
+-- 300, or 3600 where the 1-hour TTL applies) that rewrote most of the prefix
+SELECT countIf(gap_s > <ttl> AND cwrite * 2 >= side AND side > 0) AS idle_gap_rewrites,
+       sumIf(cwrite, gap_s > <ttl> AND cwrite * 2 >= side)       AS idle_gap_write_tokens
+FROM (
+  SELECT
+    toUInt64OrZero(LogAttributes['cache_creation_tokens']) AS cwrite,
+    toUInt64OrZero(LogAttributes['input_tokens'])
+      + toUInt64OrZero(LogAttributes['cache_read_tokens']) + cwrite AS side,
+    dateDiff('second',
+      lagInFrame(Timestamp, 1, Timestamp) OVER (PARTITION BY LogAttributes['session.id'] ORDER BY Timestamp
+                                                ROWS BETWEEN 1 PRECEDING AND CURRENT ROW),
+      Timestamp) AS gap_s
+  FROM otel_logs
+  WHERE match(LogAttributes['event.name'], 'api_request$')
+    AND LogAttributes['query_source'] = 'main'
+    AND if(LogAttributes['<repo-key>'] != '', LogAttributes['<repo-key>'], ResourceAttributes['<repo-key>']) = '<repo>'
+    AND Timestamp >= parseDateTimeBestEffort('<since>')
+);
+
+-- Pull requests and commits in the window (delta temporality: sum the points)
+SELECT MetricName, sum(Value) AS n
+FROM otel_metrics_sum
+WHERE MetricName IN ('claude_code.pull_request.count', 'claude_code.commit.count')
+  AND if(Attributes['<repo-key>'] != '', Attributes['<repo-key>'], ResourceAttributes['<repo-key>']) = '<repo>'
+  AND TimeUnix >= parseDateTimeBestEffort('<since>')
+GROUP BY MetricName;
+```
+
+With cumulative temporality, take `max(Value) - min(Value)` per series instead of `sum(Value)`.
+
+## Usage the lane can see without telemetry
+
+If no backend is set up yet, transcripts alone ([`transcripts.md`](transcripts.md)) give tokens by bucket, the floor, tool result sizes, compactions and the per-model split, but not cost or per-PR normalization. Run the hunt on transcripts and open the setup PR from [`claude-code-telemetry.md`](claude-code-telemetry.md) § Setup first.
