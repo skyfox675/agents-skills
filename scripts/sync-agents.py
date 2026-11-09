@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Regenerate the Cursor, Copilot, Kiro, and OpenCode agent mirrors from the
+"""Regenerate the Cursor, Copilot, Kiro, OpenCode, and Codex agent mirrors from the
 canonical Claude agents, so the same worker agent is available in every tool and
 can't drift.
 
@@ -9,6 +9,7 @@ Generated mirrors:
   .github/agents/<name>.agent.md      Copilot  — name, description, model (a model id)
   .kiro/agents/<name>.md              Kiro     — description, tools (category allowlist)
   .opencode/agents/<name>.md          OpenCode — description, mode: subagent, model?, permission
+  .codex/agents/<name>.toml           Codex    — TOML: name, description, model?, developer_instructions
 
 Frontmatter is transformed per platform; the body is copied verbatim (it points at
 the skills, which are platform-neutral). Tools that imply writing (Edit/Write) map to
@@ -16,7 +17,12 @@ Cursor readonly:false, a Kiro `write` category, and an OpenCode writer (no edit-
 otherwise read-only. The cheap tier (model: haiku) maps to Cursor 'fast', Copilot
 'Claude Haiku 4.5', and OpenCode 'anthropic/claude-haiku-4-5'; the workhorse tier
 inherits each platform's default (see MODEL-DEFAULTS.md). Kiro inherits its configured
-model (its model-id strings are environment-specific, so we don't pin one).
+model (its model-id strings are environment-specific, so we don't pin one). Codex pins
+the cheap tier to 'gpt-6-luna' and lets the workhorse inherit the session model.
+
+Codex custom agents have no tool allowlist, only coarse `features.*` switches, and
+turning the shell off would also take away file reads. So a read-only Codex agent is
+held to it by its instructions, which every body already states.
 
 OpenCode and Kiro use PLURAL directory names (`.opencode/agents/`, `.kiro/agents/`);
 OpenCode accepts the singular `agent/` only for back-compat.
@@ -32,6 +38,7 @@ CURSOR = os.path.join(ROOT, ".cursor", "agents")
 COPILOT = os.path.join(ROOT, ".github", "agents")
 KIRO = os.path.join(ROOT, ".kiro", "agents")
 OPENCODE = os.path.join(ROOT, ".opencode", "agents")
+CODEX = os.path.join(ROOT, ".codex", "agents")
 
 
 def parse(path):
@@ -110,12 +117,38 @@ def render_opencode(fm, body):
     return "---\n" + "\n".join(head) + "\n---\n\n" + body
 
 
+def toml_basic(s):
+    # TOML basic string: escape backslash and quote, \uXXXX any control character.
+    s = s.replace("\\", "\\\\").replace('"', '\\"')
+    return '"' + re.sub(r"[\x00-\x1f\x7f]", lambda m: "\\u%04x" % ord(m.group()), s) + '"'
+
+
+def toml_multiline(s):
+    # A literal multi-line string needs no escaping; fall back to a basic one only when
+    # the body holds ''' or ends in a quote that would close the literal early.
+    if "'''" not in s and not s.endswith("'"):
+        return "'''\n" + s + "'''"
+    s = s.replace("\\", "\\\\").replace('"""', '""\\"')
+    return '"""\n' + s + ("\\\n" if s.endswith('"') else "") + '"""'
+
+
+def render_codex(fm, body):
+    # Codex custom agent: one standalone TOML file. `name` is what Codex spawns by (the
+    # filename is only convention), so it keeps the canonical hyphenated name.
+    lines = ["name = " + toml_basic(val(fm, "name")),
+             "description = " + toml_basic(val(fm, "description"))]
+    if val(fm, "model") == "haiku":
+        lines.append('model = "gpt-6-luna"')
+    lines.append("developer_instructions = " + toml_multiline(body))
+    return "\n".join(lines) + "\n"
+
+
 def main():
     check = "--check" in sys.argv
     srcs = sorted(glob.glob(os.path.join(SRC, "*.md")))
     names = {os.path.basename(p)[:-3] for p in srcs}
     if not check:
-        for d in (CURSOR, COPILOT, KIRO, OPENCODE):
+        for d in (CURSOR, COPILOT, KIRO, OPENCODE, CODEX):
             os.makedirs(d, exist_ok=True)
     drift = []
     for path in srcs:
@@ -126,6 +159,7 @@ def main():
             (os.path.join(COPILOT, name + ".agent.md"), render_copilot(fm, body)),
             (os.path.join(KIRO, name + ".md"), render_kiro(fm, body)),
             (os.path.join(OPENCODE, name + ".md"), render_opencode(fm, body)),
+            (os.path.join(CODEX, name + ".toml"), render_codex(fm, body)),
         )
         for target, content in targets:
             existing = open(target).read() if os.path.exists(target) else None
@@ -139,6 +173,9 @@ def main():
         for f in glob.glob(os.path.join(d, "*.md")):
             if os.path.basename(f)[:-3] not in names:
                 stale.append(os.path.relpath(f, ROOT)); (None if check else os.remove(f))
+    for f in glob.glob(os.path.join(CODEX, "*.toml")):
+        if os.path.basename(f)[:-len(".toml")] not in names:
+            stale.append(os.path.relpath(f, ROOT)); (None if check else os.remove(f))
     for f in glob.glob(os.path.join(COPILOT, "*.agent.md")):
         if os.path.basename(f)[:-len(".agent.md")] not in names:
             stale.append(os.path.relpath(f, ROOT)); (None if check else os.remove(f))
@@ -150,7 +187,7 @@ def main():
             sys.exit(1)
         print(f"agent mirrors in sync ({len(srcs)} agents)")
     else:
-        print(f"synced {len(srcs)} agents -> .cursor + .github + .kiro + .opencode"
+        print(f"synced {len(srcs)} agents -> .cursor + .github + .kiro + .opencode + .codex"
               + (f"; pruned {len(stale)} stale" if stale else ""))
 
 

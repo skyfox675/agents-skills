@@ -1,0 +1,24 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "agents-skills",
+  "version": "2026.7.13.0",
+  "description": "Skills for AI coding: multi-agent dispatch and slot orchestration, driving PRs to merge, the pr-comments/pr-checks/pr-cleanup watcher lanes, the ci-speed-hunter/ci-flake-hunter CI lanes, GitHub and Jira issue filing/grooming/locking, technical recon, codebase spelunking, Figma design specs, and browser diagnosis.",
+  "author": {
+    "name": "skyfox675",
+    "url": "https://github.com/skyfox675"
+  },
+  "homepage": "https://github.com/skyfox675/agents-skills",
+  "repository": "https://github.com/skyfox675/agents-skills",
+  "license": "MIT",
+  "keywords": [
+    "agents",
+    "skills",
+    "orchestration",
+    "code-review",
+    "pull-requests",
+    "continuous-integration",
+    "github",
+    "jira",
+    "figma"
+  ]
+}

@@ -1,0 +1,123 @@
+[
+  {
+    "query": "caveman mode",
+    "should_trigger": true,
+    "expected": "caveman",
+    "note": "Literal trigger phrase named in the description."
+  },
+  {
+    "query": "talk like a caveman for the rest of this session please",
+    "should_trigger": true,
+    "expected": "caveman",
+    "note": "\"talk like caveman\" is an explicit trigger; the session-scoped framing is the normal way users ask for a communication mode."
+  },
+  {
+    "query": "/caveman ultra",
+    "should_trigger": true,
+    "expected": "caveman",
+    "note": "Slash-command invocation plus an intensity level the skill explicitly supports (lite/full/ultra)."
+  },
+  {
+    "query": "be brief",
+    "should_trigger": true,
+    "expected": "caveman",
+    "note": "\"be brief\" is a listed trigger phrase for the terse working-output mode."
+  },
+  {
+    "query": "use fewer tokens when you reply to me, I'm paying per million and this is getting expensive",
+    "should_trigger": true,
+    "expected": "caveman",
+    "note": "\"less tokens\" / token efficiency requested for the model's own output — the exact auto-trigger condition."
+  },
+  {
+    "query": "We're about 60% through the context window and we're only on step 2 of 9. Can you tighten up how you're writing back to me so we don't run out before the refactor is done?",
+    "should_trigger": true,
+    "expected": "caveman",
+    "note": "Needs the skill without naming it: context pressure on a long session is precisely what the ~75%-reduction output mode solves."
+  },
+  {
+    "query": "stop writing me essays. short fragments. drop the articles and the pleasantries. i just need the facts.",
+    "should_trigger": true,
+    "expected": "caveman",
+    "note": "Describes caveman's compressed fragment style verbatim without using the skill's name; informal register."
+  },
+  {
+    "query": "Please operate with maximum token efficiency for the remainder of this task while preserving full technical accuracy.",
+    "should_trigger": true,
+    "expected": "caveman",
+    "note": "Formal register; \"token efficiency\" with accuracy preserved is the skill's stated contract."
+  },
+  {
+    "query": "no preamble, no \"Great question!\", no summary paragraph at the end. minimal output only.",
+    "should_trigger": true,
+    "expected": "caveman",
+    "note": "Filler-stripping request aimed at the assistant's own responses — caveman's core behavior, phrased as a list of prohibitions."
+  },
+  {
+    "query": "You're running a long agent loop over ~40 files and each status update you print is a wall of prose. Switch to whatever compressed reporting style you have so the loop stays cheap.",
+    "should_trigger": true,
+    "expected": "caveman",
+    "note": "Cost/verbosity of the agent's own working output across a high-volume loop; user gestures at the mode without naming it."
+  },
+
+  {
+    "query": "Summarize this 30-page architecture document down to the key decisions.",
+    "should_trigger": false,
+    "expected": null,
+    "note": "Near-miss: sounds like compression, but it is summarization OF CONTENT, not a change to how the assistant communicates. Caveman is an output mode, not a summarizer."
+  },
+  {
+    "query": "This announcement post reads like a language model wrote it. Can you make it sound like an actual person?",
+    "should_trigger": false,
+    "expected": "humanizer",
+    "note": "Sibling confusion: rewriting prose so it doesn't read AI-generated is humanizer. Caveman would make it read MORE machine-like, not less."
+  },
+  {
+    "query": "Make the intro paragraph of this README shorter — it's three paragraphs and should be one.",
+    "should_trigger": false,
+    "expected": null,
+    "note": "Near-miss on \"shorter\": the target is a durable prose artifact a human reads, not the assistant's working output. That's a copy-edit, not a communication mode."
+  },
+  {
+    "query": "Our inference bill doubled. Help me cut input tokens on the API calls — probably prompt caching plus trimming the system prompt.",
+    "should_trigger": false,
+    "expected": null,
+    "note": "Near-miss on \"less tokens\": this is engineering the token cost of an application's API traffic, not asking the assistant to speak tersely."
+  },
+  {
+    "query": "Write me a skill that forces terse, low-token responses from the model.",
+    "should_trigger": false,
+    "expected": "skill-creator",
+    "note": "Meta-request: authoring a skill that does the thing, not invoking the thing. Terse output is the subject matter, not the requested behavior."
+  },
+  {
+    "query": "Strip the em dashes and the rule-of-three sentences out of this launch email.",
+    "should_trigger": false,
+    "expected": "humanizer",
+    "note": "Named AI-writing tells in a prose artifact. Shares the \"remove text\" surface with caveman but needs de-AI-ification, not compression."
+  },
+  {
+    "query": "Condense the product requirements into a one-page brief for the review meeting.",
+    "should_trigger": false,
+    "expected": "doc-coauthoring",
+    "note": "Producing a shorter human-facing DOCUMENT is co-authoring; caveman never changes deliverables, only the assistant's own chat/working output."
+  },
+  {
+    "query": "Your last few answers were so clipped I couldn't follow the reasoning. Give me more detail and walk through the steps.",
+    "should_trigger": false,
+    "expected": null,
+    "note": "Inverse request: the user is asking to LEAVE terse mode. Shares every keyword about response verbosity but wants the opposite behavior."
+  },
+  {
+    "query": "This API reference is full of jargon. Rewrite it in plain language a junior dev could follow.",
+    "should_trigger": false,
+    "expected": null,
+    "note": "Near-miss: \"simplify the language\" is a readability edit on a document. Caveman simplifies grammar to save tokens, which would make docs worse, not clearer."
+  },
+  {
+    "query": "Our commit messages are 20 lines each and nobody reads them. Set up a template that keeps them tight.",
+    "should_trigger": false,
+    "expected": null,
+    "note": "Near-miss on brevity: this is a repo convention/tooling change for human-authored commits, not a request for the assistant to compress its own speech."
+  }
+]

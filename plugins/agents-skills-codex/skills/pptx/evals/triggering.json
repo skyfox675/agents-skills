@@ -1,0 +1,123 @@
+[
+  {
+    "query": "Take the numbers in q3-budget.xlsx and turn them into a slide deck for the leadership review — one slide per cost center, plus a summary.",
+    "should_trigger": true,
+    "expected": "pptx",
+    "note": "Spreadsheet is the input, but the deliverable is a deck. Deliverable format decides, so this belongs to pptx and not xlsx."
+  },
+  {
+    "query": "Build me a 12-slide seed pitch deck: problem, solution, market size, product, traction, team, the ask.",
+    "should_trigger": true,
+    "expected": "pptx",
+    "note": "Pitch deck creation from scratch — named explicitly in the description."
+  },
+  {
+    "query": "Pull the speaker notes out of all-hands.pptx and give them to me as plain text so I can load them into the teleprompter.",
+    "should_trigger": true,
+    "expected": "pptx",
+    "note": "Extraction from a .pptx even though the content ends up somewhere else — the description says trigger regardless of downstream use."
+  },
+  {
+    "query": "Add a closing slide to roadmap-h2.pptx with next steps and owners. Match the existing layout and theme so it doesn't look bolted on.",
+    "should_trigger": true,
+    "expected": "pptx",
+    "note": "Editing an existing presentation with template/layout awareness."
+  },
+  {
+    "query": "Combine the intro slides from onboarding.pptx with the security section from compliance.pptx into a single deck for new-hire day one.",
+    "should_trigger": true,
+    "expected": "pptx",
+    "note": "Combining slide files."
+  },
+  {
+    "query": "I'm presenting Thursday. Here's my outline in markdown — build the slides from it and keep it to about 15.",
+    "should_trigger": true,
+    "expected": "pptx",
+    "note": "Deck deliverable without the user saying '.pptx'; 'slides' and 'presenting' are trigger words."
+  },
+  {
+    "query": "What's actually on slide 7 of the deck in my downloads? I think it's the one with the pricing table.",
+    "should_trigger": true,
+    "expected": "pptx",
+    "note": "Casual reference to a deck file, read-only inspection — still a pptx task."
+  },
+  {
+    "query": "Swap every chart in the quarterly deck for the updated figures I'm pasting below, and keep the brand colors and fonts exactly as they are.",
+    "should_trigger": true,
+    "expected": "pptx",
+    "note": "Editing charts inside a presentation while preserving the template."
+  },
+  {
+    "query": "Split the 60-slide training presentation into four smaller decks, one per module, so people can take them a week at a time.",
+    "should_trigger": true,
+    "expected": "pptx",
+    "note": "Splitting a slide file — explicitly named."
+  },
+  {
+    "query": "Go through the draft deck and add a comment on every slide where the data is more than two quarters stale.",
+    "should_trigger": true,
+    "expected": "pptx",
+    "note": "Working with comments in a presentation."
+  },
+
+  {
+    "query": "Take the content of the deck and rework it into a written narrative — a proper Word doc with headings, not bullets.",
+    "should_trigger": false,
+    "expected": "docx",
+    "note": "Near-miss: the deck is the input, but the deliverable is a Word document."
+  },
+  {
+    "query": "I already exported the deck to slides.pdf. Merge it with appendix.pdf and add page numbers to the combined file.",
+    "should_trigger": false,
+    "expected": "pdf",
+    "note": "Near-miss: originated as a deck, but no .pptx is touched — the whole task is PDF merging."
+  },
+  {
+    "query": "Pull the numbers behind these five slides into a spreadsheet so accounting can reconcile them line by line.",
+    "should_trigger": false,
+    "expected": "xlsx",
+    "note": "Near-miss: slides are mentioned, but the deliverable is a spreadsheet file."
+  },
+  {
+    "query": "Write my talking points for Thursday's presentation — what to open with, where to pause for questions, how to land the close.",
+    "should_trigger": false,
+    "expected": null,
+    "note": "Near-miss: says 'presentation', but the deliverable is prose talking points with no slide file involved."
+  },
+  {
+    "query": "Clean up sales-raw.csv — the headers are sitting on row 4, there are junk separator rows, and the amounts have dollar signs baked into the text.",
+    "should_trigger": false,
+    "expected": "xlsx",
+    "note": "Near-miss: messy tabular cleanup, which xlsx owns; nothing presentational about it."
+  },
+  {
+    "query": "Extract the two data tables from the board packet PDF and tell me what the burn rate line says.",
+    "should_trigger": false,
+    "expected": "pdf",
+    "note": "Near-miss: board-meeting context, but a read-only PDF extraction."
+  },
+  {
+    "query": "Build an interactive dashboard in React with a revenue chart and a set of KPI tiles the exec team can click through.",
+    "should_trigger": false,
+    "expected": null,
+    "note": "Near-miss: exec-facing visuals, but the deliverable is a web app, not a slide file."
+  },
+  {
+    "query": "Our slide-rendering web component drops custom fonts on Firefox and falls back to Times. Track down why.",
+    "should_trigger": false,
+    "expected": null,
+    "note": "Near-miss: the word 'slide' appears, but this is a front-end rendering bug in application code."
+  },
+  {
+    "query": "Draft an email to the team summarizing the Q3 results and what changes for planning next quarter.",
+    "should_trigger": false,
+    "expected": null,
+    "note": "Near-miss: same content a deck might carry, but the deliverable is an email body."
+  },
+  {
+    "query": "Make me a one-pager on the new pricing strategy that I can hand out at the offsite.",
+    "should_trigger": false,
+    "expected": null,
+    "note": "Near-miss: a presentation-adjacent leave-behind, but 'one-pager' names no format and is not a slide deck. Ambiguous, so it should not pull in pptx."
+  }
+]

@@ -1,0 +1,21 @@
+[
+  {"query": "PR #503 passes all its own checks but it never actually merges. The queue looks stuck.", "should_trigger": true, "expected": "pr-checks", "note": "Head-green is not queue-green — the merge_group layer this lane exists to cover."},
+  {"query": "One bad PR seems to be dropping the whole merge group every time. Find it.", "should_trigger": true, "expected": "pr-checks", "note": "Poison-pill detection under ALLGREEN grouping."},
+  {"query": "Start the pr-checks lane looping every 10 minutes.", "should_trigger": true, "expected": "pr-checks", "note": "Named invocation of the watcher lane this skill backs."},
+  {"query": "A bunch of my PRs are sitting CLEAN with no auto-merge and no queue entry. They're just idle.", "should_trigger": true, "expected": "pr-checks", "note": "Innocent ejections needing re-arm — and the discriminator vs never-armed PRs."},
+  {"query": "Is this merge_group failure a real break or just a flake? Same SHA passed earlier.", "should_trigger": true, "expected": "pr-checks", "note": "The flake-vs-poison-pill discriminator: same SHA with both a pass and a fail."},
+  {"query": "The Typecheck job only fails in the queue run, never on the PR itself.", "should_trigger": true, "expected": "pr-checks", "note": "Semantic conflict with current base that the head run never saw — merge origin in and fix."},
+  {"query": "PR #77 is DIRTY against main and CI won't run. Unstick it.", "should_trigger": true, "expected": "pr-checks", "note": "Conflicted/behind branches are this lane's."},
+  {"query": "The queue entry says UNMERGEABLE but the PR page looks fine.", "should_trigger": true, "expected": "pr-checks", "note": "mergeStateStatus lies when enqueued — only GraphQL mergeQueueEntry is definitive."},
+  {"query": "Keep the open agent PRs green and mergeable while I'm out.", "should_trigger": true, "expected": "pr-checks", "note": "Describes the lane's job without naming it."},
+
+  {"query": "The review bot left comments on #503 and the threads are still open.", "should_trigger": false, "expected": "pr-comments", "note": "Review threads are the pr-comments lane — this lane never touches them."},
+  {"query": "Should I arm auto-merge on this brand-new PR that the bot hasn't reviewed yet?", "should_trigger": false, "expected": "pr-comments", "note": "The INITIAL arm-after-bot-review is pr-comments'; this lane only re-arms after an ejection."},
+  {"query": "Our CI is green but takes 45 minutes. Shave the long pole.", "should_trigger": false, "expected": "ci-speed-hunting", "note": "Slow-but-green is the speed lane; this lane never touches timing."},
+  {"query": "That Playwright shard reds intermittently and passes on retry — root-cause it.", "should_trigger": false, "expected": "ci-flake-hunting", "note": "Flake root-causing is the flake lane; this lane handles real failures."},
+  {"query": "The PR merged — delete its branch and close the linked ticket.", "should_trigger": false, "expected": "pr-cleanup", "note": "Closed-PR cleanup, not open-PR health."},
+  {"query": "Keep my local main checkout fast-forwarded to origin.", "should_trigger": false, "expected": "fast-forwarding-branches", "note": "Local branch syncing, nothing to do with PR checks."},
+  {"query": "Write the acceptance criteria for this bug ticket.", "should_trigger": false, "expected": "gh-issue-filing", "note": "Issue authoring — unrelated."},
+  {"query": "Run the test suite locally and tell me what fails.", "should_trigger": false, "expected": null, "note": "Local test run, not PR/merge-queue health."},
+  {"query": "Why won't GitHub let me squash-merge this?", "should_trigger": false, "expected": "driving-prs-to-merge", "note": "General merge-strategy/auto-merge mechanics live in driving-prs-to-merge."}
+]

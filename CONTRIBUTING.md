@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for improving this toolbox. It is a shareable set of **skills, slash commands, and agents** for Claude Code, Cursor, GitHub Copilot, Kiro, and OpenCode. A few rules keep it clean and consistent.
+Thanks for improving this toolbox. It is a shareable set of **skills, slash commands, and agents** for Claude Code, Cursor, GitHub Copilot, Kiro, OpenCode, and OpenAI Codex (whose skills also run in ChatGPT). A few rules keep it clean and consistent.
 
 ## The one hard rule: no private data
 
@@ -19,18 +19,18 @@ Canonical sources live under `.claude/`:
 - Commands: `.claude/commands/<name>.md`
 - Agents: `.claude/agents/<name>.md`
 
-Commands and agents are **generated** into the Cursor, Copilot, Kiro, and OpenCode homes (`.cursor/`, `.github/prompts/`, `.github/agents/`, `.kiro/agents/`, `.opencode/agents/`). **Never hand-edit those mirrors.** After editing a command or agent:
+Commands and agents are **generated** into the Cursor, Copilot, Kiro, OpenCode, and Codex homes (`.cursor/`, `.github/prompts/`, `.github/agents/`, `.kiro/agents/`, `.opencode/agents/`, `.codex/agents/`, `.codex/prompts/`). **Never hand-edit those mirrors.** After editing a command or agent:
 
 ```
-make sync     # regenerate every mirror and both plugin payloads
+make sync     # regenerate every mirror and every plugin payload
 make check    # fails if anything drifted — run this in CI
 ```
 
-Skills are read directly from `.claude/skills/` by Claude Code, Cursor, and Copilot, so they need no mirror. Kiro and OpenCode read the same Anthropic Agent Skills format but from their own dirs, so `.kiro/skills` and `.opencode/skills` are symlinks to `.claude/skills` — `make sync-skills` creates them; `make check-skills` verifies. Still one source of truth.
+Skills are read directly from `.claude/skills/` by Claude Code, Cursor, and Copilot, so they need no mirror. Kiro, OpenCode, and Codex read the same Agent Skills format but from their own dirs, so `.kiro/skills`, `.opencode/skills`, and `.agents/skills` are symlinks to `.claude/skills` — `make sync-skills` creates them; `make check-skills` verifies. Still one source of truth.
 
 Git hook templates live under `hooks/` (plain POSIX `sh` + CI workflow templates). They are shareable, not wired to this repo, and have no mirror — keep them dependency-free and generic, with every external tool optional (skip-if-absent). See [`hooks/README.md`](hooks/README.md).
 
-`plugins/agents-skills/` (Claude Code) and `plugins/agents-skills-cursor/` (Cursor) are the **published plugin payloads — generated, never hand-edited.** `make build-plugin` rebuilds both. They share the same skills, and each takes its agents and commands from that tool's mirror (`.claude/` or `.cursor/`), because the frontmatter differs (real copies, not symlinks: Claude Code installs the plugin directory on its own, so a link escaping it would dangle); `make check-plugin` fails on drift. The `.claude-plugin/marketplace.json` and `.cursor-plugin/marketplace.json` at the repo root make this repo its own plugin marketplace in both ecosystems. Releases are cut by `.github/workflows/release-plugin.yml` — CalVer `YYYY.M.D.N`, tagged `v<version>`, attaching both plugin zips plus one zip per skill. Version numbers are stamped by the workflow; don't bump them by hand.
+`plugins/agents-skills/` (Claude Code), `plugins/agents-skills-cursor/` (Cursor), and `plugins/agents-skills-codex/` (Codex and ChatGPT) are the **published plugin payloads — generated, never hand-edited** (the manifests excepted). `make build-plugin` rebuilds all three. They share the same skills. The Claude and Cursor payloads take their agents and commands from that tool's mirror (`.claude/` or `.cursor/`); a Codex plugin cannot carry either, so its payload is skills only, because the frontmatter differs (real copies, not symlinks: Claude Code installs the plugin directory on its own, so a link escaping it would dangle); `make check-plugin` fails on drift. The `.claude-plugin/marketplace.json`, `.cursor-plugin/marketplace.json`, and `.agents/plugins/marketplace.json` files make this repo its own plugin marketplace in all three ecosystems. Releases are cut by `.github/workflows/release-plugin.yml` — CalVer `YYYY.M.D.N`, tagged `v<version>`, attaching the three plugin zips plus one zip per skill. Version numbers are stamped by the workflow; don't bump them by hand.
 
 ## Adding things
 

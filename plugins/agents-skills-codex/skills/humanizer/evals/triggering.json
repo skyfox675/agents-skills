@@ -1,0 +1,123 @@
+[
+  {
+    "query": "This blog draft reads like ChatGPT wrote it. Fix that.",
+    "should_trigger": true,
+    "expected": "humanizer",
+    "note": "Canonical case: prose that carries AI tells, user wants it to read human-written."
+  },
+  {
+    "query": "Can you go through this post and make it sound more natural and human?",
+    "should_trigger": true,
+    "expected": "humanizer",
+    "note": "Uses the description's own framing — editing text to sound natural and human-written."
+  },
+  {
+    "query": "There are em dashes everywhere in this doc and every list is exactly three items. Clean it up.",
+    "should_trigger": true,
+    "expected": "humanizer",
+    "note": "Names two of the skill's specific detections (em dash overuse, rule of three) without naming the skill."
+  },
+  {
+    "query": "Our homepage copy says things like \"stands as a testament to our commitment to excellence.\" Cut the promotional fluff.",
+    "should_trigger": true,
+    "expected": "humanizer",
+    "note": "Inflated symbolism plus promotional language — both listed patterns, phrased as a real marketing complaint."
+  },
+  {
+    "query": "A reviewer flagged my PR description as \"obviously AI-generated.\" Rewrite it so it doesn't read that way, but keep the technical details exactly as they are.",
+    "should_trigger": true,
+    "expected": "humanizer",
+    "note": "De-AI-ify a real artifact while preserving meaning — exactly the skill's contract."
+  },
+  {
+    "query": "review this essay for filler",
+    "should_trigger": true,
+    "expected": "humanizer",
+    "note": "Terse, informal; filler phrases are an explicit detection. \"Review\" is in the description's trigger language."
+  },
+  {
+    "query": "The draft is full of \"experts say\" and \"studies have shown\" with nothing behind them. Can you tighten those up?",
+    "should_trigger": true,
+    "expected": "humanizer",
+    "note": "Vague attributions — a named pattern. User needs the skill without knowing it exists."
+  },
+  {
+    "query": "Please audit the attached release notes for stylistic markers characteristic of large language model output and revise accordingly.",
+    "should_trigger": true,
+    "expected": "humanizer",
+    "note": "Formal register, same request. Tests that triggering isn't dependent on casual phrasing."
+  },
+  {
+    "query": "It's littered with \"it's not just a tool, it's a philosophy\" type sentences. I hate that construction. Kill all of them.",
+    "should_trigger": true,
+    "expected": "humanizer",
+    "note": "Negative parallelism — a listed detection — described by example rather than by name."
+  },
+  {
+    "query": "I wrote the first half and the model wrote the second half, and you can tell exactly where the seam is. Even out the voice so the whole thing sounds like me.",
+    "should_trigger": true,
+    "expected": "humanizer",
+    "note": "Preserving the writer's voice while removing LLM statistical patterns is the skill's stated purpose; user never says \"AI writing.\""
+  },
+
+  {
+    "query": "Proofread this for typos and subject-verb agreement.",
+    "should_trigger": false,
+    "expected": null,
+    "note": "Near-miss: a plain copy-edit/grammar pass. Correct text can still be full of AI tells, and AI-tell-laden text is usually grammatically perfect — different job."
+  },
+  {
+    "query": "Translate this user guide into Spanish, keeping the tone friendly.",
+    "should_trigger": false,
+    "expected": null,
+    "note": "Near-miss: rewriting prose, but translation. Nothing to do with removing signs of AI authorship."
+  },
+  {
+    "query": "I need to write a design doc for the new auth flow. Help me structure it and draft the sections.",
+    "should_trigger": false,
+    "expected": "doc-coauthoring",
+    "note": "Sibling confusion: writing a document from scratch with structure is doc-coauthoring. Humanizer edits existing prose, it doesn't originate it."
+  },
+  {
+    "query": "Be brief in your replies — skip the preamble and just give me the answer.",
+    "should_trigger": false,
+    "expected": "caveman",
+    "note": "Sibling confusion: this is about the ASSISTANT's working output being terse (caveman), not about making a prose artifact sound human-written."
+  },
+  {
+    "query": "Here's a student essay. Tell me whether it was written by AI — give me a confidence score.",
+    "should_trigger": false,
+    "expected": null,
+    "note": "Near-miss: shares the entire AI-writing concept space, but the ask is DETECTION/classification. Humanizer's job is rewriting text you already own."
+  },
+  {
+    "query": "Turn this markdown spec into a formatted Word document with a table of contents.",
+    "should_trigger": false,
+    "expected": "docx",
+    "note": "Near-miss: prose is the input, but the deliverable is a .docx file. Format conversion, not style repair."
+  },
+  {
+    "query": "Make the tone of this email more formal — it's going to a VP and right now it's too casual.",
+    "should_trigger": false,
+    "expected": null,
+    "note": "Near-miss: a register/tone edit on prose. Formality is orthogonal to AI tells; formalizing it could even add them."
+  },
+  {
+    "query": "Build a skill that enforces our house style guide on every doc we write.",
+    "should_trigger": false,
+    "expected": "skill-creator",
+    "note": "Meta-request: authoring a new skill about writing style, not applying an existing style pass to a piece of text."
+  },
+  {
+    "query": "The em dashes in our docs render as mojibake after the markdown build. Find where the encoding breaks.",
+    "should_trigger": false,
+    "expected": null,
+    "note": "Tricky near-miss: says \"em dashes\" and \"docs\" but it's a character-encoding bug in a build pipeline. Keyword overlap, zero concept overlap."
+  },
+  {
+    "query": "Add citations and a references section to this white paper.",
+    "should_trigger": false,
+    "expected": null,
+    "note": "Near-miss on \"vague attributions\": adding sources is a research/content task. Humanizer rewrites unsupported hedging, it doesn't go find the sources."
+  }
+]

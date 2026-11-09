@@ -2,7 +2,7 @@
 
 ## What this repo is
 
-A collection of AI **skills, slash commands, and agent definitions** (Markdown plus a couple of small scripts) for Claude Code, Cursor, GitHub Copilot, Kiro, and OpenCode — also published as a Claude Code plugin. There is no running service and no application code. The security surface is therefore about **what these artifacts instruct an AI agent to do**, and about keeping the repo free of sensitive data.
+A collection of AI **skills, slash commands, and agent definitions** (Markdown plus a couple of small scripts) for Claude Code, Cursor, GitHub Copilot, Kiro, OpenCode, and OpenAI Codex (skills also run in ChatGPT) — also published as Claude Code, Cursor, and Codex plugins. There is no running service and no application code. The security surface is therefore about **what these artifacts instruct an AI agent to do**, and about keeping the repo free of sensitive data.
 
 ## Reporting a vulnerability
 

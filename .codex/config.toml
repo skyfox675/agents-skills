@@ -1,0 +1,11 @@
+# Project config for OpenAI Codex. Codex loads this file, and the custom agents in
+# .codex/agents/, only once the project is trusted.
+#
+# Hand-maintained, unlike the generated agents/ and prompts/ beside it.
+
+[agents]
+# pr-dispatcher spawns implementer and deploy-watcher spawns fix workers, so a spawned
+# agent must be able to spawn one level further. Codex CLI 0.167.0 already allows that
+# (its V2 agent threads ignore this key). V1 threads default to a depth of 1, which
+# would block it, so the key stays as a guard for V1.
+max_depth = 2

@@ -1,16 +1,20 @@
 #!/usr/bin/env python3
 """Stamp a version into every plugin and marketplace manifest.
 
-Four manifests, two ecosystems:
+Five manifests, three ecosystems:
 
   plugins/agents-skills/.claude-plugin/plugin.json          Claude plugin
   .claude-plugin/marketplace.json                           Claude marketplace
   plugins/agents-skills-cursor/.cursor-plugin/plugin.json   Cursor plugin
   .cursor-plugin/marketplace.json                           Cursor marketplace
+  plugins/agents-skills-codex/plugin.json                   Codex/ChatGPT plugin
+
+The Codex marketplace (.agents/plugins/marketplace.json) carries no version, so it is
+not stamped; Codex reads the version from the plugin's own manifest.
 
 Versions are CalVer with a patch counter, YYYY.M.D.N, so several releases on the same
 day never collide (the first of a day is `.0`). The release workflow computes the next
-free N by probing existing `v<version>` tags. Both ecosystems ship the same version.
+free N by probing existing `v<version>` tags. Every ecosystem ships the same version.
 
   python3 scripts/set-version.py 2026.7.11.0
 """
@@ -22,6 +26,7 @@ VERSION_RE = re.compile(r"^\d{4}\.\d{1,2}\.\d{1,2}\.\d+$")
 PLUGIN_MANIFESTS = [
     os.path.join("plugins", "agents-skills", ".claude-plugin", "plugin.json"),
     os.path.join("plugins", "agents-skills-cursor", ".cursor-plugin", "plugin.json"),
+    os.path.join("plugins", "agents-skills-codex", "plugin.json"),
 ]
 MARKETPLACE_MANIFESTS = [
     os.path.join(".claude-plugin", "marketplace.json"),

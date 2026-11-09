@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Shared instructions for AI coding tools (Cursor, GitHub Copilot, and any tool honoring `AGENTS.md`). Claude Code uses `CLAUDE.md`, which carries the same guidance — keep the two in sync; this file is the tool-neutral mirror.
+Shared instructions for AI coding tools (Cursor, GitHub Copilot, OpenAI Codex, and any tool honoring `AGENTS.md`). Claude Code uses `CLAUDE.md`, which carries the same guidance — keep the two in sync; this file is the tool-neutral mirror.
 
 ## What this repository is
 
@@ -13,8 +13,8 @@ Because it is public and reusable, every artifact must be **clean of personal an
 ## Repository layout
 
 - `.claude/skills/<skill-name>/SKILL.md` — one directory per skill; YAML frontmatter (`name`, `description`) + body. Supporting files (`references/`, scripts) alongside.
-- `.claude/agents/<agent-name>.md` — one file per agent; frontmatter (`name`, `description`, `tools`, optional `model`) + system prompt. Ships 18 tiered worker agents (`scout` cheap; `builder`/`reviewer`/`implementer`/`pr-rescuer`/`diagnostician`/`verifier`/`spelunker`/`design-mapper` workhorse — these the commands dispatch — plus the `pr-dispatcher`/`pr-comments`/`pr-checks`/`pr-cleanup` single-lane PR watchers, the `deploy-watcher` deploy-health lane, and the `ci-speed-hunter`/`ci-flake-hunter` continuous CI lanes, the `token-bleed-hunter` token-efficiency lane and the `branch-ff` fast-forward lane, all run via `/loop`). Mirrored to Cursor (`.cursor/agents/`), Copilot (`.github/agents/*.agent.md`), Kiro (`.kiro/agents/`) and OpenCode (`.opencode/agents/`) via `make sync-agents`; never hand-edit the mirrors. Skills are exposed to Kiro and OpenCode (same Agent Skills format) as symlinks `.kiro/skills` / `.opencode/skills` → `.claude/skills` via `make sync-skills`.
-- `.claude-plugin/marketplace.json` + `plugins/agents-skills/` (Claude Code) and `.cursor-plugin/marketplace.json` + `plugins/agents-skills-cursor/` (Cursor) — this repo is its own plugin marketplace for both ecosystems. The plugin payload is **generated** from `.claude/{skills,agents,commands}` via `make build-plugin`; never hand-edit it. Released by `.github/workflows/release-plugin.yml` as CalVer `YYYY.M.D.N`, tagged `v<version>`, with a full-plugin zip + per-skill zips.
+- `.claude/agents/<agent-name>.md` — one file per agent; frontmatter (`name`, `description`, `tools`, optional `model`) + system prompt. Ships 18 tiered worker agents (`scout` cheap; `builder`/`reviewer`/`implementer`/`pr-rescuer`/`diagnostician`/`verifier`/`spelunker`/`design-mapper` workhorse — these the commands dispatch — plus the `pr-dispatcher`/`pr-comments`/`pr-checks`/`pr-cleanup` single-lane PR watchers, the `deploy-watcher` deploy-health lane, and the `ci-speed-hunter`/`ci-flake-hunter` continuous CI lanes, the `token-bleed-hunter` token-efficiency lane and the `branch-ff` fast-forward lane, all run via `/loop`). Mirrored to Cursor (`.cursor/agents/`), Copilot (`.github/agents/*.agent.md`), Kiro (`.kiro/agents/`), OpenCode (`.opencode/agents/`) and Codex (`.codex/agents/*.toml`) via `make sync-agents`; never hand-edit the mirrors (`.codex/config.toml` is hand-maintained). Skills are exposed to Kiro, OpenCode and Codex (same Agent Skills format) as symlinks `.kiro/skills` / `.opencode/skills` / `.agents/skills` → `.claude/skills` via `make sync-skills`.
+- `.claude-plugin/marketplace.json` + `plugins/agents-skills/` (Claude Code) and `.cursor-plugin/marketplace.json` + `plugins/agents-skills-cursor/` (Cursor) and `.agents/plugins/marketplace.json` + `plugins/agents-skills-codex/` (Codex/ChatGPT, skills only) — this repo is its own plugin marketplace for all three ecosystems. The plugin payload is **generated** from `.claude/{skills,agents,commands}` via `make build-plugin`; never hand-edit it. Released by `.github/workflows/release-plugin.yml` as CalVer `YYYY.M.D.N`, tagged `v<version>`, with one zip per plugin + per-skill zips.
 - `.claude/settings.json` — Claude Code config (`model: opus`, `includeCoAuthoredBy: false`).
 - `CLAUDE.md` — Claude Code's copy of this guidance.
 - `README.md` — human entry point.
@@ -36,12 +36,14 @@ Author content once (canonically under `.claude/`) and expose it to the other to
 - **Cursor** — reads this `AGENTS.md` (and `.cursor/rules/*.mdc` if you add project rules); agents in `.cursor/agents/`.
 - **Kiro** — agents in `.kiro/agents/`, skills in `.kiro/skills/` (Anthropic Agent Skills format).
 - **OpenCode** — agents in `.opencode/agents/`, skills in `.opencode/skills/` (same Agent Skills format).
+- **OpenAI Codex** (CLI, IDE extension, ChatGPT desktop app) — reads this `AGENTS.md`; skills in `.agents/skills/`; custom agents in `.codex/agents/*.toml`; custom prompts from `~/.codex/prompts/` only. The project `.codex/` layer loads only once the project is trusted. ChatGPT web/mobile runs skills only (Codex plugin or per-skill upload).
 
-**Slash commands** don't share a home or format, so the canonical `.claude/commands/*.md` are mirrored per tool by `scripts/sync-commands.py` (`make sync-commands`; `make check-commands` for CI). Never hand-edit the mirrors — regenerate them. Filename = command name across all three:
+**Slash commands** don't share a home or format, so the canonical `.claude/commands/*.md` are mirrored per tool by `scripts/sync-commands.py` (`make sync-commands`; `make check-commands` for CI). Never hand-edit the mirrors — regenerate them. Filename = command name across all four:
 
 - **Claude Code** — `.claude/commands/<name>.md` (frontmatter `description`/`argument-hint`/`allowed-tools`; `$ARGUMENTS`).
 - **Cursor** — `.cursor/commands/<name>.md` (plain markdown, no frontmatter; args = text after the command).
 - **GitHub Copilot (VS Code)** — `.github/prompts/<name>.prompt.md` (frontmatter `description`/`argument-hint`/`agent`; `${input:args}`). Copilot CLI does not support custom commands yet.
+- **Codex** — `.codex/prompts/<name>.md` (frontmatter `description`/`argument-hint`; `$ARGUMENTS`). Copied to `~/.codex/prompts/`, run as `/prompts:<name>`. Deprecated upstream in favour of skills.
 
 ## Model selection policy
 

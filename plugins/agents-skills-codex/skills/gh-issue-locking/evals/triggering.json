@@ -1,0 +1,122 @@
+[
+ {
+  "query": "Pick up the next open GitHub issue and start working it.",
+  "should_trigger": true,
+  "expected": "gh-issue-locking",
+  "note": "'Pick up the next issue' must lock before any work starts \u2014 named trigger."
+ },
+ {
+  "query": "Claim issue #205 for me before you dispatch the agent.",
+  "should_trigger": true,
+  "expected": "gh-issue-locking",
+  "note": "Lock BEFORE dispatch is the core protocol."
+ },
+ {
+  "query": "PR #389 just merged into dev. The linked issue is still showing open \u2014 sort it out.",
+  "should_trigger": true,
+  "expected": "gh-issue-locking",
+  "note": "Non-default-branch merge doesn't auto-close; release the lock and explicitly close."
+ },
+ {
+  "query": "Why is issue #77 still open? Its fix shipped a week ago.",
+  "should_trigger": true,
+  "expected": "gh-issue-locking",
+  "note": "'Why is this issue still open' is verbatim in the description \u2014 reconciliation sweep."
+ },
+ {
+  "query": "Issue #44 has an agent-claimed label and a lock comment from yesterday. Can I take it, or is someone on it?",
+  "should_trigger": true,
+  "expected": "gh-issue-locking",
+  "note": "Active-vs-stale lock decision via the two-condition staleness test."
+ },
+ {
+  "query": "Release the lock on #61 \u2014 the agent failed and the PR was closed without merging.",
+  "should_trigger": true,
+  "expected": "gh-issue-locking",
+  "note": "Failure exit path: full release back to the queue (strip assignee)."
+ },
+ {
+  "query": "Claim the next 5 open issues in one pass and dispatch them.",
+  "should_trigger": true,
+  "expected": "gh-issue-locking",
+  "note": "Batch-claim flow needs the multi-claim race re-check."
+ },
+ {
+  "query": "Looks like another operator already locked #120 but the lock is three days old with no PR. Reclaim it?",
+  "should_trigger": true,
+  "expected": "gh-issue-locking",
+  "note": "Stale-lock reclaim etiquette, including cross-operator audit comment."
+ },
+ {
+  "query": "We're shipping #90 and its two sibling issues in one PR \u2014 how do I lock all three?",
+  "should_trigger": true,
+  "expected": "gh-issue-locking",
+  "note": "Bundled-issue locking (lead lock + bundled_with pointers)."
+ },
+ {
+  "query": "Claim and lock #58 before I send an agent at it, so no one else double-works it.",
+  "should_trigger": true,
+  "expected": "gh-issue-locking",
+  "note": "explicit claim/lock intent, not the dispatch entry point"
+ },
+ {
+  "query": "Pick up the next open Jira issue and start working PROJ-412.",
+  "should_trigger": false,
+  "expected": "jira-issue-locking",
+  "note": "Cross-tracker confuser \u2014 same claim protocol, but Jira keys route to jira-issue-locking."
+ },
+ {
+  "query": "File a fresh GitHub issue for the crash and write up the six sections.",
+  "should_trigger": false,
+  "expected": "gh-issue-filing",
+  "note": "Authoring a new issue body is gh-issue-filing, not the claim/release protocol."
+ },
+ {
+  "query": "Apply do-not-dispatch to #33 \u2014 we're holding it for a human.",
+  "should_trigger": false,
+  "expected": "gh-issue-labels",
+  "note": "Operator hold via label is the gh-issue-labels control plane (locking only honors it)."
+ },
+ {
+  "query": "Resolve the bot review threads on PR #501 and get auto-merge re-armed.",
+  "should_trigger": false,
+  "expected": "driving-prs-to-merge",
+  "note": "PR review-thread / merge lifecycle \u2014 no issue claiming."
+ },
+ {
+  "query": "Fill 8 slots and keep agents going on the queue, P0 first.",
+  "should_trigger": false,
+  "expected": "orchestrating-slots",
+  "note": "N-slot orchestration loop; locking is a sub-step it calls, not the ask itself."
+ },
+ {
+  "query": "Dispatch the implementation sub-agent for #62 with the full eight-section brief.",
+  "should_trigger": false,
+  "expected": "dispatching-subagents",
+  "note": "The dispatch brief itself is dispatching-subagents (locking happens just before it)."
+ },
+ {
+  "query": "Transition PROJ-300 to Done now that its PR merged \u2014 Jira didn't auto-move it.",
+  "should_trigger": false,
+  "expected": "jira-issue-locking",
+  "note": "Cross-tracker release-and-resolve confuser; Jira's transition equivalent."
+ },
+ {
+  "query": "This issue is half-baked \u2014 groom it with the lead until the intent is clear before anyone claims it.",
+  "should_trigger": false,
+  "expected": "grooming-issues",
+  "note": "Grooming for intent is upstream; claiming comes later."
+ },
+ {
+  "query": "Lock the front door of the office before you leave tonight.",
+  "should_trigger": false,
+  "expected": "none",
+  "note": "Truly unrelated \u2014 physical lock, keyword 'lock' only."
+ },
+ {
+  "query": "Recon issue #210 and give me an implementation approach plus LoE.",
+  "should_trigger": false,
+  "expected": "technical-recon",
+  "note": "Technical scoping/sizing of a groomed issue, not a claim/lock operation."
+ }
+]

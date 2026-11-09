@@ -1,0 +1,122 @@
+[
+  {
+    "query": "Every PR sits in CI for 52 minutes even when it's a two-line change. All checks pass, it's just brutally slow. Where is the time actually going?",
+    "should_trigger": true,
+    "expected": "ci-speed-hunting",
+    "note": "Green-but-slow CI with no named lane — the core MINE step (rank the real wall-clock long poles) is exactly this skill."
+  },
+  {
+    "query": "Rank the jobs in our pr-checks workflow by wall-clock contribution to the critical path on the last 20 successful runs, then tell me which one to attack first.",
+    "should_trigger": true,
+    "expected": "ci-speed-hunting",
+    "note": "Formal phrasing of Step 1 — per-job durations on GREEN runs, ranked, worst-first."
+  },
+  {
+    "query": "Our e2e matrix runs 6 shards. Shard 3 takes 27 minutes and the other five finish in 8-9. The whole matrix waits on shard 3. Can we rebalance it?",
+    "should_trigger": true,
+    "expected": "ci-speed-hunting",
+    "note": "Under-balanced matrix — a SAFE lever (re-assign specs, total specs unchanged)."
+  },
+  {
+    "query": "The build job seems to reinstall the browser binaries and the whole package store from scratch on every run — I don't think the cache is ever hitting. Fix it.",
+    "should_trigger": true,
+    "expected": "ci-speed-hunting",
+    "note": "Cold cache / dep-install-in-hot-path bottleneck class, with the cache-key-hashes-every-input proof obligation."
+  },
+  {
+    "query": "start the ci-speed-hunter lane, loop it every 30 minutes against acme/widgets",
+    "should_trigger": true,
+    "expected": "ci-speed-hunting",
+    "note": "Names the lane/agent this skill backs directly."
+  },
+  {
+    "query": "A README-only PR still fires all 6 web e2e shards and the visual-regression job. That's 25 wasted minutes. Should we add a changed-paths filter?",
+    "should_trigger": true,
+    "expected": "ci-speed-hunting",
+    "note": "Missing tier gate — the CONDITIONAL lever, where the filter glob must be a superset of every input the job verifies."
+  },
+  {
+    "query": "Looking at the workflow, the bundle job has needs: [unit] but I'm pretty sure it only reads source and the lockfile. It's idling ~11 minutes behind a barrier it doesn't consume. Worth dropping the edge?",
+    "should_trigger": true,
+    "expected": "ci-speed-hunting",
+    "note": "Serial needs-chain that could overlap — SAFE lever, with the does-not-read-the-upstream's-output proof."
+  },
+  {
+    "query": "The merge queue is taking forever to drain — 14 PRs in the batch and each gate run is ~50 min. Nothing is failing, it's just glacial. Help.",
+    "should_trigger": true,
+    "expected": "ci-speed-hunting",
+    "note": "Queue throughput bounded by the merge-gating critical path; explicitly nothing red, so it's latency, not flake."
+  },
+  {
+    "query": "Both the e2e job and the lighthouse job build the production bundle themselves. Same inputs, same output, built twice. Can we build once and hand the artifact to both?",
+    "should_trigger": true,
+    "expected": "ci-speed-hunting",
+    "note": "Redundant-rebuild / build-once anti-pattern — SAFE lever, every consumer gets the identical artifact."
+  },
+  {
+    "query": "Quickest way to cut CI in half is probably to just point the e2e grep at @smoke and skip the rest, right? Let's do that.",
+    "should_trigger": true,
+    "expected": "ci-speed-hunting",
+    "note": "This skill owns the request AND owns the refusal — narrowing --grep is OUT OF BOUNDS (coverage cut, not a speed fix). It must trigger to say no and offer a safe lever."
+  },
+  {
+    "query": "The e2e shard covering checkout reds about one run in five and then passes clean on a re-run with no code change. Root-cause it.",
+    "should_trigger": false,
+    "expected": "ci-flake-hunting",
+    "note": "Intermittent red on retry is the flake lane. The speed lane never touches a job that fails."
+  },
+  {
+    "query": "CI is slow because the integration job hangs and then blows its 30-minute timeout and fails. Every single run. Make it not do that.",
+    "should_trigger": false,
+    "expected": "ci-flake-hunting",
+    "note": "Hardest negative: framed as 'CI is slow' but the job is RED (hang + timeout failure). A failing job is the flake hunter's, never the speed hunter's."
+  },
+  {
+    "query": "The merge queue keeps ejecting perfectly good PRs and we're losing hours of throughput to it. Find whatever keeps killing the batch.",
+    "should_trigger": false,
+    "expected": "ci-flake-hunting",
+    "note": "Queue ejections are caused by a flaky merge_group red — that is ci-flake-hunting's lane, not speed's and not pr-checks'. Speed never takes a red."
+  },
+  {
+    "query": "One flaky spec in the settle-race family is taxing every PR behind it in the queue. Kill it and unstick the PRs it stranded.",
+    "should_trigger": false,
+    "expected": "ci-flake-hunting",
+    "note": "Uses the same 'taxes every PR in flight' leverage language as the speed skill, but the target is a flake — the other lane."
+  },
+  {
+    "query": "PR #412 is fully green, mergeStateStatus is CLEAN, but it's just sitting there — auto-merge seems to have been dropped and it never entered the queue.",
+    "should_trigger": false,
+    "expected": "pr-checks",
+    "note": "Green PR not merging is a re-arm/queue-entry problem, not a CI-duration problem."
+  },
+  {
+    "query": "The review bot left four unresolved threads on the caching PR and it can't merge until they're handled. Work them.",
+    "should_trigger": false,
+    "expected": "pr-comments",
+    "note": "Shares 'caching PR' surface but the work is review-thread resolution."
+  },
+  {
+    "query": "We've merged 30-odd PRs this week and the remote is full of stale head branches and linked issues nobody closed. Tidy it up.",
+    "should_trigger": false,
+    "expected": "pr-cleanup",
+    "note": "Post-merge housekeeping — no CI timing involved."
+  },
+  {
+    "query": "The dashboard page takes about 6 seconds to become interactive and the LCP is awful. Profile it in a real browser and tell me what's blocking.",
+    "should_trigger": false,
+    "expected": "browser-diagnosis",
+    "note": "Application/runtime performance, not CI wall-clock. Shares only the word 'slow'."
+  },
+  {
+    "query": "My local dev server rebuilds for 40 seconds on every save and the bundler config looks untuned. Speed up the local loop.",
+    "should_trigger": false,
+    "expected": null,
+    "note": "Build-speed work, but on the developer's machine — this skill's scope is the CI critical path and the merge queue."
+  },
+  {
+    "query": "We're only running 3 agents at a time and issues are queued for hours. Throughput is terrible — should I raise the concurrency cap?",
+    "should_trigger": false,
+    "expected": "orchestrating-slots",
+    "note": "Throughput/queue-latency vocabulary again, but it's agent-slot concurrency, not CI job duration."
+  }
+]

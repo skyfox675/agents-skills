@@ -1,0 +1,123 @@
+[
+  {
+    "query": "Take the raw notes in meeting-notes.md and turn them into a polished Word doc with a title page, numbered headings, and an auto-generated table of contents.",
+    "should_trigger": true,
+    "expected": "docx",
+    "note": "Explicit .docx deliverable plus the TOC/headings formatting cues the description calls out."
+  },
+  {
+    "query": "Open contract-v3.docx, accept all the tracked changes from the second reviewer, and leave a comment on section 4.2 asking whether the indemnity cap is still right.",
+    "should_trigger": true,
+    "expected": "docx",
+    "note": "Tracked changes and comments in a named .docx — squarely the described editing surface."
+  },
+  {
+    "query": "I need a two-page report for the board summarizing these three research briefs. Give it to me as a Word file on our letterhead so I can edit it before sending.",
+    "should_trigger": true,
+    "expected": "docx",
+    "note": "'report' + 'Word file' + letterhead: the description explicitly claims report/memo/letter deliverables in Word."
+  },
+  {
+    "query": "There's a .docx in my downloads called onboarding-handbook. Pull out every heading and give me the outline so I can see how it's structured.",
+    "should_trigger": true,
+    "expected": "docx",
+    "note": "Casual reference to a .docx by name; extracting/reorganizing content from a Word file is in scope."
+  },
+  {
+    "query": "In proposal-draft.docx, replace every instance of the placeholder {{CLIENT_NAME}} with the real value and don't wreck the formatting or the styles.",
+    "should_trigger": true,
+    "expected": "docx",
+    "note": "Find-and-replace in a Word file, which the description names directly."
+  },
+  {
+    "query": "Swap the logo image at the top of letterhead-template.docx for the new one, keep it the same width, and leave the rest of the template untouched.",
+    "should_trigger": true,
+    "expected": "docx",
+    "note": "Inserting/replacing images in a Word template is listed in the description."
+  },
+  {
+    "query": "Draft a formal offer letter for a new engineering hire — start date, comp, equity vesting, at-will language — and hand it back as something I can open in Word.",
+    "should_trigger": true,
+    "expected": "docx",
+    "note": "Deliverable is a letter openable in Word without the user ever saying '.docx'."
+  },
+  {
+    "query": "Combine these four chapter .docx files into one document and regenerate the table of contents so the page numbers are right.",
+    "should_trigger": true,
+    "expected": "docx",
+    "note": "Multi-file Word merge plus TOC and page numbers."
+  },
+  {
+    "query": "Go through policy-handbook.docx and add a comment on every paragraph that still cites the old 90-day retention window so legal can review them in one pass.",
+    "should_trigger": true,
+    "expected": "docx",
+    "note": "Comment authoring inside an existing Word document."
+  },
+  {
+    "query": "Write up the incident postmortem as a memo — headings for timeline, impact, root cause, and action items — and save it as a .docx.",
+    "should_trigger": true,
+    "expected": "docx",
+    "note": "'memo' as a .docx deliverable, an explicit trigger phrase in the description."
+  },
+
+  {
+    "query": "Take quarterly-review.docx and turn it into a 12-slide deck for Monday's readout — one slide per section, key numbers pulled forward.",
+    "should_trigger": false,
+    "expected": "pptx",
+    "note": "Near-miss: the input is a Word file, but the deliverable is a presentation. Deliverable format decides."
+  },
+  {
+    "query": "Pull the four data tables out of annual-report.docx and give me a spreadsheet I can sort and filter by line item.",
+    "should_trigger": false,
+    "expected": "xlsx",
+    "note": "Near-miss: reads a .docx, but the output is a spreadsheet file — xlsx owns spreadsheet deliverables."
+  },
+  {
+    "query": "Convert handbook.docx into a static HTML site with a nav sidebar and anchor links per section, then drop it in docs/.",
+    "should_trigger": false,
+    "expected": null,
+    "note": "Near-miss: converting a Word doc into HTML/Markdown for a site is a content-pipeline task, not Word document authoring or editing."
+  },
+  {
+    "query": "Merge these two PDF chapters into one file and add page numbers in the footer.",
+    "should_trigger": false,
+    "expected": "pdf",
+    "note": "Near-miss: 'page numbers' is a docx trigger word, but the file format is PDF end to end."
+  },
+  {
+    "query": "Generate a printable invoice as a PDF from this order JSON — line items, subtotal, tax, total.",
+    "should_trigger": false,
+    "expected": "pdf",
+    "note": "Near-miss: a business-document deliverable, but explicitly a PDF, which the description excludes."
+  },
+  {
+    "query": "Write a report on our test coverage — where we're thin, what's untested, what to prioritize.",
+    "should_trigger": false,
+    "expected": null,
+    "note": "Near-miss: 'report' is a docx trigger word, but no file format is named; the user likely just wants prose in chat. Ambiguous, so it should not force a Word deliverable."
+  },
+  {
+    "query": "Help me co-author the design doc for the new caching layer. I want to work through the structure and the tradeoffs with you before any text gets written.",
+    "should_trigger": false,
+    "expected": "doc-coauthoring",
+    "note": "Near-miss: document work, but the ask is an iterative authoring workflow, not producing or editing a .docx file."
+  },
+  {
+    "query": "This draft paragraph reads like a language model wrote it — too many em dashes, everything comes in threes. Fix the voice.",
+    "should_trigger": false,
+    "expected": "humanizer",
+    "note": "Near-miss: editing document prose, but it's a style pass on text with no Word file involved."
+  },
+  {
+    "query": "Add python-docx to the service's dependencies and write unit tests for the ReportBuilder class that mock out the file writes.",
+    "should_trigger": false,
+    "expected": null,
+    "note": "Near-miss: names a Word library, but this is ordinary coding and testing work — the description excludes general coding tasks."
+  },
+  {
+    "query": "Set up a Google Docs API integration so the app can spin up a doc from our template whenever a deal closes.",
+    "should_trigger": false,
+    "expected": null,
+    "note": "Near-miss: document generation, but Google Docs is explicitly excluded by the description."
+  }
+]
