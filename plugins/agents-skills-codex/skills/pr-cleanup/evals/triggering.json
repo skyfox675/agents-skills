@@ -1,0 +1,21 @@
+[
+  {"query": "That PR merged two hours ago but issue #216 is still sitting open.", "should_trigger": true, "expected": "pr-cleanup", "note": "Integration-branch merges don't auto-close 'Closes #N' — closing is manual, and that is this lane."},
+  {"query": "Start the pr-cleanup lane on a loop.", "should_trigger": true, "expected": "pr-cleanup", "note": "Named invocation of the watcher lane this skill backs."},
+  {"query": "My disk is full of spent worktrees from agents that finished days ago.", "should_trigger": true, "expected": "pr-cleanup", "note": "Reclaiming local branches/worktrees after PRs close."},
+  {"query": "An agent opened a PR then died, and the PR got closed without merging. The issue still says agent-claimed.", "should_trigger": true, "expected": "pr-cleanup", "note": "The abandoned-PR backstop: release the lock but leave the issue OPEN and re-dispatchable."},
+  {"query": "Why do merged issues keep getting picked up again by the dispatcher?", "should_trigger": true, "expected": "pr-cleanup", "note": "Zombie issues from stale locks / unclosed issues — exactly what this lane prevents."},
+  {"query": "Sweep everything that landed today: close the tickets, drop the locks, delete the branches.", "should_trigger": true, "expected": "pr-cleanup", "note": "The lane's full close-out described without naming it."},
+  {"query": "Is it safe to delete this worktree, or is something still working in it?", "should_trigger": true, "expected": "pr-cleanup", "note": "Salvage caution before deleting — confirm it belongs to a closed PR."},
+  {"query": "The agent-claimed label is still on PROJ-88 but its PR is long gone.", "should_trigger": true, "expected": "pr-cleanup", "note": "Lock release after a closed PR."},
+  {"query": "Tidy up after the merges from last night.", "should_trigger": true, "expected": "pr-cleanup", "note": "Informal phrasing of the post-merge janitor job."},
+
+  {"query": "PR #216 is open and its CI is red — fix it.", "should_trigger": false, "expected": "pr-checks", "note": "This lane acts ONLY on closed PRs; open-PR health is pr-checks."},
+  {"query": "There are unresolved review threads holding up the merge.", "should_trigger": false, "expected": "pr-comments", "note": "Open review threads on an open PR — not cleanup."},
+  {"query": "Claim issue #90 before we dispatch an agent at it.", "should_trigger": false, "expected": "gh-issue-locking", "note": "Acquiring a lock at dispatch time, not releasing one after a PR closes."},
+  {"query": "Delete this remote branch on GitHub.", "should_trigger": false, "expected": null, "note": "A one-off remote branch deletion isn't the post-merge close-out lane."},
+  {"query": "Keep my primary checkout fast-forwarded so new worktrees start current.", "should_trigger": false, "expected": "fast-forwarding-branches", "note": "Syncing the primary, not removing spent worktrees."},
+  {"query": "The merge queue keeps ejecting correct PRs.", "should_trigger": false, "expected": "pr-checks", "note": "Queue health on open PRs."},
+  {"query": "Force-merge this PR, I don't care about the checks.", "should_trigger": false, "expected": null, "note": "This lane never forces a merge and never acts on an open PR."},
+  {"query": "Close this issue as won't-fix, we're not doing it.", "should_trigger": false, "expected": null, "note": "A product decision to close an issue, not a merge-driven close-out."},
+  {"query": "Why did that flake eject my PR from the queue?", "should_trigger": false, "expected": "ci-flake-hunting", "note": "Flake diagnosis, not cleanup."}
+]

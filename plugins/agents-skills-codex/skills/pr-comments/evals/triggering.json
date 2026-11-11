@@ -1,0 +1,21 @@
+[
+  {"query": "The review bot left six comments on PR #412 and it's been sitting there all morning — deal with them.", "should_trigger": true, "expected": "pr-comments", "note": "Bot review threads on an open agent PR: apply-or-counter, then resolve."},
+  {"query": "All my PRs are green but none of them are merging. Nothing's red.", "should_trigger": true, "expected": "pr-comments", "note": "The classic symptom of unresolved review threads blocking auto-merge — check threads FIRST."},
+  {"query": "Start the pr-comments lane on a 5 minute loop.", "should_trigger": true, "expected": "pr-comments", "note": "Named invocation of the watcher lane this skill backs."},
+  {"query": "Should I turn on auto-merge for #388 yet, or wait for the review bot to weigh in?", "should_trigger": true, "expected": "pr-comments", "note": "The arm/disarm gate — this lane owns the initial arm-after-bot-review."},
+  {"query": "The bot posted a review comment AFTER the PR was already queued to merge. What now?", "should_trigger": true, "expected": "pr-comments", "note": "The late-thread-on-an-armed-PR race: disable-auto, fix, resolve, re-arm."},
+  {"query": "A reviewer says my null check is wrong but I think they misread the code. How do I handle that thread?", "should_trigger": true, "expected": "pr-comments", "note": "Wrong/out-of-scope feedback gets a reasoned counter, verified — not performative agreement."},
+  {"query": "Can I mark the review thread resolved now? The fix is committed locally.", "should_trigger": true, "expected": "pr-comments", "note": "Strict ordering rule: push first, confirm pushed, THEN resolve. Never resolve an unpushed fix."},
+  {"query": "Sweep the open PRs and close out any outstanding reviewer feedback so they can land.", "should_trigger": true, "expected": "pr-comments", "note": "Describes the lane's per-tick job without naming it."},
+  {"query": "gh pr view --json reviewThreads is coming back empty but I can see comments in the UI.", "should_trigger": true, "expected": "pr-comments", "note": "The known trap — use raw GraphQL for review threads."},
+
+  {"query": "The typecheck job is red on PR #412 — fix it.", "should_trigger": false, "expected": "pr-checks", "note": "A failing required check is the pr-checks lane, not review threads."},
+  {"query": "PR #388 got kicked out of the merge queue and lost its auto-merge. Re-arm it.", "should_trigger": false, "expected": "pr-checks", "note": "Re-arm-after-ejection is explicitly the pr-checks lane's, not this one — the load-bearing boundary."},
+  {"query": "That PR merged an hour ago but the linked issue is still open.", "should_trigger": false, "expected": "pr-cleanup", "note": "Post-merge close-out is the cleanup lane."},
+  {"query": "This spec fails maybe one run in six, then passes on retry.", "should_trigger": false, "expected": "ci-flake-hunting", "note": "Flake root-causing, not review-thread handling."},
+  {"query": "Our merge queue takes 50 minutes to drain. Make it faster.", "should_trigger": false, "expected": "ci-speed-hunting", "note": "CI latency lane."},
+  {"query": "Write me a code review of this diff — what's wrong with it?", "should_trigger": false, "expected": null, "note": "Performing a review is not the same as closing out review threads on an open PR."},
+  {"query": "Which model should the sub-agent on issue #142 run at?", "should_trigger": false, "expected": "gh-issue-labels", "note": "Model/effort label resolution — unrelated."},
+  {"query": "My branch has a merge conflict against main.", "should_trigger": false, "expected": "pr-checks", "note": "DIRTY/conflicted branches belong to the checks lane."},
+  {"query": "Post a comment on the issue explaining why we're deprioritizing it.", "should_trigger": false, "expected": null, "note": "Commenting on an issue is not resolving PR review threads."}
+]

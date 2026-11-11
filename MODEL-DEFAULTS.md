@@ -16,13 +16,13 @@ Default the loop **and** verification to **workhorse**; escalate to premium only
 
 ## Tier → model (defaults — update as availability shifts)
 
-| Tier | Claude Code | GitHub Copilot | Cursor |
-|---|---|---|---|
-| premium *(gated)* | Opus 4.8 · Fable 5 | Claude Opus 4.8 / GPT-5.5 | Premium mode (Opus 4.8) |
-| workhorse *(default)* | Sonnet 4.6 | Claude Sonnet 4.6 | Sonnet 4.6 / Composer 2.5 |
-| cheap / mechanical | Haiku 4.5 | Raptor Mini / GPT-5.4-mini / Haiku 4.5 | Auto *(free)* / Gemini 3.5 Flash / Grok Build 0.1 |
+| Tier | Claude Code | GitHub Copilot | Cursor | Codex / ChatGPT |
+|---|---|---|---|---|
+| premium *(gated)* | Opus 4.8 · Fable 5 | Claude Opus 4.8 / GPT-5.5 | Premium mode (Opus 4.8) | `gpt-6-astra` |
+| workhorse *(default)* | Sonnet 4.6 | Claude Sonnet 4.6 | Sonnet 4.6 / Composer 2.5 | `gpt-6.1-sol` |
+| cheap / mechanical | Haiku 4.5 | Raptor Mini / GPT-5.4-mini / Haiku 4.5 | Auto *(free)* / Gemini 3.5 Flash / Grok Build 0.1 | `gpt-6-luna` |
 
-Reasoning tiers are **Anthropic-first** for consistent behaviour across tools; the **mechanical tier uses each platform's cheapest native model** — Copilot's Raptor Mini, Cursor's free Auto — for maximum savings. There is deliberately **no cheap-tier label**: the cheap model is a tool-task choice the orchestrator makes for mechanical sub-steps, never a knob to force code-writing onto a model that ships subtle bugs (see `gh-issue-labels` / `jira-issue-fields`).
+Reasoning tiers are **Anthropic-first** for consistent behaviour across tools. Codex serves only OpenAI models, so it substitutes the OpenAI model of matching tier (`gpt-6.1-sol` carries a 500K context in Codex, above the ≈200K floor); the **mechanical tier uses each platform's cheapest native model** — Copilot's Raptor Mini, Cursor's free Auto — for maximum savings. There is deliberately **no cheap-tier label**: the cheap model is a tool-task choice the orchestrator makes for mechanical sub-steps, never a knob to force code-writing onto a model that ships subtle bugs (see `gh-issue-labels` / `jira-issue-fields`).
 
 ## Offload mechanical work to a cheap-tier subagent
 
@@ -32,4 +32,5 @@ The orchestrator's context is the expensive one. Don't run `ls`, `grep`, `git st
 
 - **Claude Code** — `model:` on the Agent/Task dispatch (subagents), the `agent-model:*` issue label, or the `model:` command token. Default = workhorse; omit to inherit it.
 - **GitHub Copilot** — `model:` in a prompt file's frontmatter. Set it only where a fixed model genuinely helps; otherwise leave it out and let the user's model picker (or the cheap tier for mechanical prompts) choose.
+- **Codex** — `model` in a `.codex/agents/<name>.toml` agent file. `make sync-agents` pins only the cheap tier (`gpt-6-luna`); every other agent inherits the session model. `[agents] default_subagent_model` in `config.toml` sets a default for all spawned agents.
 - **Cursor** — no per-command model field; the user's model selector (or **Auto**) governs. State the intended tier in the command body so the user can match it.

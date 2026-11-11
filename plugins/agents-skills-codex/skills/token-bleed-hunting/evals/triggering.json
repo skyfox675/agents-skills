@@ -1,0 +1,116 @@
+[
+  {
+    "query": "Our Claude Code bill doubled this month but we're not shipping more. The OTel metrics are in Prometheus. Where are the tokens going?",
+    "should_trigger": true,
+    "expected": "token-bleed-hunting",
+    "note": "Spend up, work flat, telemetry available: the core MINE step, normalizing tokens per unit of work."
+  },
+  {
+    "query": "claude_code.token.usage shows cacheCreation running at roughly three times cacheRead on this repo. Is something busting the prompt cache?",
+    "should_trigger": true,
+    "expected": "token-bleed-hunting",
+    "note": "Cache-busting bleed class, named by its metric signal."
+  },
+  {
+    "query": "Every new session in this repo starts at about 40k input tokens before I've typed anything. Our CLAUDE.md is huge and there are six MCP servers. What can we trim?",
+    "should_trigger": true,
+    "expected": "token-bleed-hunting",
+    "note": "Always-loaded context bloat: the session floor, with a capability-safe trim as the fix."
+  },
+  {
+    "query": "Looking at the session transcripts, the agent runs the full test suite and the Bash tool_result comes back at 200KB every time. How do we stop that eating the context window?",
+    "should_trigger": true,
+    "expected": "token-bleed-hunting",
+    "note": "Unbounded tool output, confirmed in transcripts; fix lives in harness config (instructions, hooks), not the test runner."
+  },
+  {
+    "query": "cost.usage by model says most of our spend is the top-tier model, but the subagents mostly grep and list files. Should those be on a cheaper model?",
+    "should_trigger": true,
+    "expected": "token-bleed-hunting",
+    "note": "Model-tier mismatch, with the proof that the work is mechanical before downgrading."
+  },
+  {
+    "query": "start the token-bleed-hunter lane on a 6 hour loop for this repo",
+    "should_trigger": true,
+    "expected": "token-bleed-hunting",
+    "note": "Names the agent this skill backs."
+  },
+  {
+    "query": "We export Claude Code telemetry to ClickHouse through an OTel collector. Write me the query for cache-hit ratio per day and tokens per pull request over the last month.",
+    "should_trigger": true,
+    "expected": "token-bleed-hunting",
+    "note": "Backend query recipe plus the normalized efficiency metrics the skill defines."
+  },
+  {
+    "query": "Long sessions keep auto-compacting two or three times and then re-reading the same files. That has to be expensive. Find where it comes from.",
+    "should_trigger": true,
+    "expected": "token-bleed-hunting",
+    "note": "Compaction thrash and redundant re-reads, both bleed classes."
+  },
+  {
+    "query": "We merged a PR last week that trimmed CLAUDE.md to cut tokens. Did it actually save anything?",
+    "should_trigger": true,
+    "expected": "token-bleed-hunting",
+    "note": "The post-merge VERIFY step against the PR's recorded baseline."
+  },
+  {
+    "query": "Easiest way to cut tokens is to just delete the security and testing sections from CLAUDE.md, right? Do that.",
+    "should_trigger": true,
+    "expected": "token-bleed-hunting",
+    "note": "This skill owns the request and the refusal: deleting instructions that encode real constraints cuts capability, not waste."
+  },
+  {
+    "query": "Every PR sits in CI for 50 minutes even on a two-line change. Everything passes, it's just slow. Where is the time going?",
+    "should_trigger": false,
+    "expected": "ci-speed-hunting",
+    "note": "Same efficiency framing, but the target is CI wall-clock time, not agent token spend."
+  },
+  {
+    "query": "Be terse from now on, I'm paying per token.",
+    "should_trigger": false,
+    "expected": "caveman",
+    "note": "A request to change this session's output style, not a telemetry-driven hunt."
+  },
+  {
+    "query": "Our app calls the Claude API and the per-request cost is high. Add prompt caching to the request builder in our backend.",
+    "should_trigger": false,
+    "expected": null,
+    "note": "Hardest negative: token cost and caching, but in application code calling the API. This lane only fixes agent harness config."
+  },
+  {
+    "query": "The e2e shard reds one run in five and passes on retry. Root-cause it.",
+    "should_trigger": false,
+    "expected": "ci-flake-hunting",
+    "note": "A flake. Shares the hunter loop shape and nothing else."
+  },
+  {
+    "query": "Set up an OpenTelemetry collector and Grafana dashboards for our Node service's request latency.",
+    "should_trigger": false,
+    "expected": null,
+    "note": "OTel vocabulary, but application observability, not agent token telemetry."
+  },
+  {
+    "query": "We're only running 3 agents at a time and the issue queue backs up for hours. Should I raise the concurrency?",
+    "should_trigger": false,
+    "expected": "orchestrating-slots",
+    "note": "Agent throughput and capacity, not tokens wasted per session."
+  },
+  {
+    "query": "Which model should implementation agents use on Copilot versus Cursor?",
+    "should_trigger": false,
+    "expected": null,
+    "note": "A model-defaults lookup (MODEL-DEFAULTS.md), with no telemetry and no bleed to find."
+  },
+  {
+    "query": "The deploy to staging went red after the last merge. Is it transient or real?",
+    "should_trigger": false,
+    "expected": "deploy-watching",
+    "note": "A different lane; only the watcher/hunter loop vocabulary overlaps."
+  },
+  {
+    "query": "Review this PR that changes the agent prompts.",
+    "should_trigger": false,
+    "expected": null,
+    "note": "Review of harness-config files, but no efficiency hunt. Goes to the reviewer agent."
+  }
+]

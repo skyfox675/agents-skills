@@ -1,0 +1,110 @@
+[
+ {
+  "query": "Which model and effort tier should this Jira dispatch run at? Check the labels first.",
+  "should_trigger": true,
+  "expected": "jira-issue-fields",
+  "note": "Resolving model/effort from labels is the fields control-plane's core job."
+ },
+ {
+  "query": "Set PROJ-123 to Highest priority and pin it to opus",
+  "should_trigger": true,
+  "expected": "jira-issue-fields",
+  "note": "Native Priority field + agent-model-opus label are this skill's taxonomy."
+ },
+ {
+  "query": "Add the agent-effort-high label to this ticket so the agent works carefully",
+  "should_trigger": true,
+  "expected": "jira-issue-fields",
+  "note": "agent-effort-* label semantics (prose transport into the prompt) live here."
+ },
+ {
+  "query": "Put a hold on this Jira issue so no orchestrator dispatches it \u2014 humans only",
+  "should_trigger": true,
+  "expected": "jira-issue-fields",
+  "note": "do-not-dispatch operator hold is defined and operated by the fields skill."
+ },
+ {
+  "query": "What issue type should I pick for this \u2014 bug, story, or task \u2014 and what Priority?",
+  "should_trigger": true,
+  "expected": "jira-issue-fields",
+  "note": "Issue-type + Priority selection is the control-plane taxonomy."
+ },
+ {
+  "query": "In our Jira project, set the Priority field and the agent-model label on PROJ-77 before I dispatch it.",
+  "should_trigger": true,
+  "expected": "jira-issue-fields",
+  "note": "Jira-native field/label control before dispatch"
+ },
+ {
+  "query": "We're standing up a new Jira project \u2014 what fields and labels does the orchestration control plane need?",
+  "should_trigger": true,
+  "expected": "jira-issue-fields",
+  "note": "Setting up fields/labels in a new Jira project is the setup section here."
+ },
+ {
+  "query": "The issue carries agent-model-opus but my session has no opus access \u2014 what now?",
+  "should_trigger": true,
+  "expected": "jira-issue-fields",
+  "note": "Access-gated model fallback (release claim, leave the label) is fields-skill specific."
+ },
+ {
+  "query": "Before I dispatch a Jira issue, which fields and labels control the model and effort tier?",
+  "should_trigger": true,
+  "expected": "jira-issue-fields",
+  "note": "explicit Jira cue + control-field intent"
+ },
+ {
+  "query": "Lock PROJ-123 with the agent-claimed label and a lock comment before dispatching",
+  "should_trigger": false,
+  "expected": "jira-issue-locking",
+  "note": "The claim/lock/release PROTOCOL behind agent-claimed lives in the locking sibling."
+ },
+ {
+  "query": "File a Jira issue for this bug with verified file:line refs and acceptance criteria",
+  "should_trigger": false,
+  "expected": "jira-issue-filing",
+  "note": "Writing the groomed issue body is filing, not the field/label control plane."
+ },
+ {
+  "query": "Add the agent-model:opus and agent-effort:high labels to GitHub issue #88",
+  "should_trigger": false,
+  "expected": "gh-issue-labels",
+  "note": "Cross-tracker confuser: GitHub issue # and colon-style labels -> gh-issue-labels."
+ },
+ {
+  "query": "Run scripts/bootstrap-labels.sh to create the agent label set on GitHub",
+  "should_trigger": false,
+  "expected": "gh-issue-labels",
+  "note": "The bootstrap script is the GitHub sibling; the Jira fields skill ships none."
+ },
+ {
+  "query": "Why isn't my PR merging \u2014 it's green but stuck, and auto-merge dropped",
+  "should_trigger": false,
+  "expected": "driving-prs-to-merge",
+  "note": "Post-open PR merge lifecycle is driving-prs-to-merge, not the issue field plane."
+ },
+ {
+  "query": "Dispatch a sub-agent at PROJ-205 and write the eight-section dispatch brief",
+  "should_trigger": false,
+  "expected": "dispatching-subagents",
+  "note": "The dispatch brief itself is dispatching-subagents; fields only feed model/effort into it."
+ },
+ {
+  "query": "Recon PROJ-300 and give me an implementation approach plus an LoE estimate",
+  "should_trigger": false,
+  "expected": "technical-recon",
+  "note": "Dev-side recon + LoE is technical-recon, not field/label control."
+ },
+ {
+  "query": "Keep 6 agents running, fill slots P0-first, and back off when the queue jams",
+  "should_trigger": false,
+  "expected": "orchestrating-slots",
+  "note": "The slot loop reads these fields but the loop itself is orchestrating-slots."
+ },
+ {
+  "query": "Build a pitch deck for the quarterly review with a title slide and agenda",
+  "should_trigger": false,
+  "expected": "none",
+  "note": "Truly unrelated presentation task \u2014 no Jira fields or labels involved."
+ }
+]

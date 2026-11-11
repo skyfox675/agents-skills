@@ -62,13 +62,23 @@ def main():
                f"Cursor at this repository ({REPO}), which carries its own "
                "`.cursor-plugin/marketplace.json`.")
     out.append("")
+    out.append("Codex (CLI, IDE extension, and the ChatGPT desktop app):")
+    out.append("")
+    out.append("```")
+    out.append(f"codex plugin marketplace add {REPO}")
+    out.append(f"codex plugin add {manifest['name']}@agents-skills")
+    out.append("```")
+    out.append("")
     out.append("## Downloads")
     out.append("")
     out.append("- `agents-skills-plugin.zip` is the Claude Code plugin (manifest, skills, agents, commands).")
     out.append("- `agents-skills-cursor-plugin.zip` is the Cursor plugin (same skills, with Cursor's "
                "agent and command formats).")
-    out.append("- `<skill>.zip` is one zip per skill, for Claude Desktop. Upload under Settings, then "
-               "Capabilities, then Skills.")
+    out.append("- `agents-skills-codex-plugin.zip` is the Codex/ChatGPT plugin (same skills; Codex "
+               "plugins carry no agents or commands). ChatGPT workspace admins can upload it in the "
+               "admin console.")
+    out.append("- `<skill>.zip` is one zip per skill, for Claude Desktop (Settings, then Capabilities, "
+               "then Skills) and ChatGPT (Skills, then Create, then Upload from your computer).")
     out.append("")
 
     out.append(f"## Skills ({len(skills)})")

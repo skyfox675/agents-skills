@@ -1,0 +1,123 @@
+[
+  {
+    "query": "Merge these six scanned invoice PDFs into one file and rotate the three that came through the scanner sideways.",
+    "should_trigger": true,
+    "expected": "pdf",
+    "note": "Merge plus rotate on PDFs — both named in the description."
+  },
+  {
+    "query": "Pull the text out of pages 40 through 58 of this 300-page PDF and summarize the methodology section for me.",
+    "should_trigger": true,
+    "expected": "pdf",
+    "note": "Read/extract text from a PDF; the output is a summary, but the PDF is the input surface."
+  },
+  {
+    "query": "Fill in this PDF application form — the fields are applicant name, mailing address, and account number — then flatten it so nobody can edit the values.",
+    "should_trigger": true,
+    "expected": "pdf",
+    "note": "PDF form filling, explicitly in the description."
+  },
+  {
+    "query": "The contract in my downloads is a scan, so it's just images. OCR it so the text is selectable and searchable.",
+    "should_trigger": true,
+    "expected": "pdf",
+    "note": "OCR on a scanned PDF, named directly; the file is referenced casually rather than by path."
+  },
+  {
+    "query": "Split proposal-final.pdf into one file per chapter, using the top-level bookmarks as the split points.",
+    "should_trigger": true,
+    "expected": "pdf",
+    "note": "Splitting a PDF."
+  },
+  {
+    "query": "Stamp a diagonal DRAFT watermark across every page of this 42-page PDF before I circulate it to reviewers.",
+    "should_trigger": true,
+    "expected": "pdf",
+    "note": "Watermarking a PDF."
+  },
+  {
+    "query": "Put a password on the quarterly summary PDF, and strip the owner password off vendor-terms.pdf — I have the rights to it, it's just locked against copy-paste.",
+    "should_trigger": true,
+    "expected": "pdf",
+    "note": "Encrypt/decrypt PDFs, both named in the description."
+  },
+  {
+    "query": "Make me a clean one-page printable invoice from this order data — line items, tax, total — that I can email out as-is.",
+    "should_trigger": true,
+    "expected": "pdf",
+    "note": "Creating a new PDF; 'printable' and 'email out as-is' imply the PDF deliverable without the user naming it."
+  },
+  {
+    "query": "Extract every embedded image from the marketing brochure PDF at full resolution and dump them into an images/ folder.",
+    "should_trigger": true,
+    "expected": "pdf",
+    "note": "Image extraction from a PDF."
+  },
+  {
+    "query": "This 90-page annual report PDF has a revenue table somewhere around page 30. Find it and tell me what the year-over-year growth was.",
+    "should_trigger": true,
+    "expected": "pdf",
+    "note": "Table extraction from a PDF where the answer stays in chat — a read-only PDF task, not a spreadsheet build."
+  },
+
+  {
+    "query": "Pull the transaction tables out of statements.pdf and give me a spreadsheet I can pivot on — one row per transaction, columns for date, merchant, and amount.",
+    "should_trigger": false,
+    "expected": "xlsx",
+    "note": "Near-miss: PDF is the input, but the deliverable is a spreadsheet file. The output format decides."
+  },
+  {
+    "query": "Turn this 30-page whitepaper PDF into a 10-slide deck I can present at the conference.",
+    "should_trigger": false,
+    "expected": "pptx",
+    "note": "Near-miss: PDF input, presentation deliverable."
+  },
+  {
+    "query": "Convert the PDF report into an editable Word document so the legal team can mark it up with tracked changes.",
+    "should_trigger": false,
+    "expected": "docx",
+    "note": "Near-miss: PDF input, but the deliverable is a .docx with tracked-changes editing."
+  },
+  {
+    "query": "Our invoice page needs a PDF export. Wire up Puppeteer in the worker so it renders the React route to a PDF and uploads it to object storage.",
+    "should_trigger": false,
+    "expected": null,
+    "note": "Near-miss: says PDF repeatedly, but this is application code — building a service feature, not manipulating a PDF file for the user."
+  },
+  {
+    "query": "Read through this .docx and give me a bullet summary of what changed since the last version.",
+    "should_trigger": false,
+    "expected": "docx",
+    "note": "Near-miss: document reading, but the file is Word, not PDF."
+  },
+  {
+    "query": "The pdf.js viewer in our app renders blank pages on Safari but works fine on Chrome. Figure out why.",
+    "should_trigger": false,
+    "expected": null,
+    "note": "Near-miss: a PDF library is central, but this is a front-end rendering bug needing browser debugging, not PDF file manipulation."
+  },
+  {
+    "query": "Write up the API reference for our webhooks — endpoints, payload shapes, retry semantics.",
+    "should_trigger": false,
+    "expected": "doc-coauthoring",
+    "note": "Near-miss: documentation authoring with no PDF file anywhere in the task."
+  },
+  {
+    "query": "Summarize what's on slides 3 through 8 of the deck for the folks who missed the meeting.",
+    "should_trigger": false,
+    "expected": "pptx",
+    "note": "Near-miss: content extraction for a summary, but the source is a presentation file."
+  },
+  {
+    "query": "Build a nightly pipeline that ingests our vendor CSV drops into Postgres and dedupes on order_id.",
+    "should_trigger": false,
+    "expected": null,
+    "note": "Near-miss: document/data plumbing, but no PDF at all — a database pipeline task."
+  },
+  {
+    "query": "Add a footer with page numbers and the doc revision to the Word manuscript before it goes to the copy editor.",
+    "should_trigger": false,
+    "expected": "docx",
+    "note": "Near-miss: page-level layout work, but on a Word file, which the pdf skill does not own."
+  }
+]

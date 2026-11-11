@@ -1,6 +1,6 @@
 # agents-skills
 
-A toolbox of skills, slash commands, and agents for AI coding assistants. It runs in Claude Code, Cursor, GitHub Copilot, Kiro, and OpenCode.
+A toolbox of skills, slash commands, and agents for AI coding assistants. It runs in Claude Code, Cursor, GitHub Copilot, Kiro, OpenCode, and OpenAI Codex, and its skills also run in ChatGPT.
 
 Four kinds of thing live here:
 
@@ -15,7 +15,7 @@ Do the Quickstart for whichever tool you use. The full inventory is under [What'
 
 ## Install as a plugin
 
-This repo is its own plugin marketplace for both Claude Code and Cursor, so on either tool you get every skill, agent, and command without copying files.
+This repo is its own plugin marketplace for Claude Code, Cursor, and Codex. On Claude Code and Cursor the plugin brings every skill, agent, and command. A Codex plugin can only carry skills, so on Codex it brings the skills and the agents come from `.codex/agents/` (see the Codex section).
 
 On Claude Code, two lines:
 
@@ -26,13 +26,22 @@ On Claude Code, two lines:
 
 On Cursor, install `agents-skills` from the plugin marketplace, or point Cursor at this repository. It carries a `.cursor-plugin/marketplace.json` at the root, so Cursor can source the plugin straight from git.
 
-Every [release](https://github.com/skyfox675/agents-skills/releases) attaches both plugins, `agents-skills-plugin.zip` for Claude Code and `agents-skills-cursor-plugin.zip` for Cursor, plus one zip per skill. The per-skill zips exist for Claude Desktop, where you upload them under Settings, then Capabilities, then Skills. Releases are versioned `YYYY.M.D.N` and tagged `v<version>`.
+On Codex (the CLI, the IDE extension, or the ChatGPT desktop app), also two lines:
+
+```
+codex plugin marketplace add skyfox675/agents-skills
+codex plugin add agents-skills@agents-skills
+```
+
+The skills then show up as `agents-skills:<name>`.
+
+Every [release](https://github.com/skyfox675/agents-skills/releases) attaches all three plugins: `agents-skills-plugin.zip` for Claude Code, `agents-skills-cursor-plugin.zip` for Cursor, and `agents-skills-codex-plugin.zip` for Codex and ChatGPT. It also attaches one zip per skill. Those are for Claude Desktop, where you upload them under Settings, then Capabilities, then Skills, and for ChatGPT (see the ChatGPT section). Releases are versioned `YYYY.M.D.N` and tagged `v<version>`.
 
 For any other tool, or if you would rather copy the raw files into your own project, use the Quickstart.
 
 ## Quickstart
 
-1. **Get the files.** Clone this repo and open the folder in your tool. Skills, commands, and agents are already set up inside `.claude/`, and mirrored to `.cursor/`, `.github/`, `.kiro/`, and `.opencode/`. To use them in your own project instead, copy your tool's folders (named below) into your project root.
+1. **Get the files.** Clone this repo and open the folder in your tool. Skills, commands, and agents are already set up inside `.claude/`, and mirrored to `.cursor/`, `.github/`, `.kiro/`, `.opencode/`, `.codex/`, and `.agents/`. To use them in your own project instead, copy your tool's folders (named below) into your project root.
 
    ```bash
    git clone https://github.com/skyfox675/agents-skills.git
@@ -155,6 +164,54 @@ Then tell me what you installed.
 
 </details>
 
+<details>
+<summary><b>OpenAI Codex (CLI and IDE extension)</b></summary>
+
+&nbsp;
+
+Codex reads `AGENTS.md` for project instructions, skills from `.agents/skills/`, and custom agents from `.codex/agents/*.toml`, all of which are already in this repo. Codex uses the same Agent Skills format as Claude, so `.agents/skills` is a symlink to `.claude/skills`. To use them in your own project, copy this repo's `.agents/`, `.codex/`, and `.claude/skills/` folders into your project root so the link resolves.
+
+Codex only loads a project's `.codex/` folder once you trust the project. It asks the first time you open the folder. You can also add the project to `~/.codex/config.toml` yourself:
+
+```toml
+[projects."/path/to/your/project"]
+trust_level = "trusted"
+```
+
+The agents keep their names, so you ask for them the same way, for example "spawn a scout agent to find where the session is refreshed". `scout` runs on `gpt-6-luna`, the cheap tier, and the rest run on your session's model. To have them in every project, copy `.codex/agents/*.toml` into `~/.codex/agents/` instead. Codex has no per-agent tool allowlist, so the read-only agents (`scout`, `reviewer`, `verifier`, `diagnostician`) stay read-only because their instructions say so, not because a tool is switched off. Run Codex with `-s read-only` if you need that enforced.
+
+Commands come as Codex custom prompts in `.codex/prompts/`. Codex only reads prompts from your home folder, so copy them there (`cp .codex/prompts/*.md ~/.codex/prompts/`) and run them as `/prompts:<name>`, for example `/prompts:gh-issue the export button does nothing`. OpenAI has deprecated custom prompts in favour of skills, but they still work.
+
+Codex has no `/loop`. To run a watcher or hunter lane, ask for one tick at a time, or loop it from your shell with `codex exec`.
+
+Install the helper skills by pasting this to Codex:
+
+```text
+Install these skills into .agents/skills/ (or ~/.agents/skills/ for every project). Each skill is a folder with a SKILL.md inside it:
+1. Anthropic skills (docx, pdf, pptx, xlsx, skill-creator, doc-coauthoring, mcp-builder): copy each skills/<name>/ folder from github.com/anthropics/skills
+2. caveman: run its official installer from github.com/JuliusBrussee/caveman
+3. humanizer: git clone github.com/blader/humanizer
+Then tell me what you installed.
+```
+
+</details>
+
+<details>
+<summary><b>ChatGPT</b></summary>
+
+&nbsp;
+
+The ChatGPT desktop app runs Codex on your machine, so it uses the same setup as the Codex section above: the plugin for the skills, and `.codex/agents/` in a trusted project (or `~/.codex/agents/`) for the agents.
+
+ChatGPT on the web and on mobile can run skills, but not custom agents or commands. There are two ways to get the skills there:
+
+- **The plugin.** On Business, Enterprise, and Edu workspaces an admin can upload `agents-skills-codex-plugin.zip` from a [release](https://github.com/skyfox675/agents-skills/releases) in the admin console. The skills inside it then work in ChatGPT on the web, desktop, and mobile.
+- **One skill at a time.** Upload a per-skill zip from a release under Skills, then Create, then Upload from your computer. This only works on plans that allow skill uploads.
+
+The skills that orchestrate other agents (`dispatching-subagents`, `orchestrating-slots`, and the watcher and hunter lanes) need a tool that can spawn agents and run commands. Use those from Codex or the desktop app, not from ChatGPT on the web.
+
+</details>
+
 One note on caveman. It installs by running a script (`curl ... | bash`), which runs code on your machine. That is normal for installers, but read [`install.sh`](https://raw.githubusercontent.com/JuliusBrussee/caveman/main/install.sh) first if you want to know what it does.
 
 ## What's included
@@ -218,7 +275,7 @@ The helper skills below point at tools maintained elsewhere. You install them in
 
 ### Agents
 
-These are the workers the commands spawn, plus the single-lane watchers and CI hunters you run continuously with `/loop`. Each one runs on the cheapest model that fits, which is how heavy work stays cheap. The canonical agents live in `.claude/agents/`. Running `make sync-agents` generates the Cursor (`.cursor/agents/`), Copilot (`.github/agents/`), Kiro (`.kiro/agents/`), and OpenCode (`.opencode/agents/`) copies, so every supported tool gets them.
+These are the workers the commands spawn, plus the single-lane watchers and CI hunters you run continuously with `/loop`. Each one runs on the cheapest model that fits, which is how heavy work stays cheap. The canonical agents live in `.claude/agents/`. Running `make sync-agents` generates the Cursor (`.cursor/agents/`), Copilot (`.github/agents/`), Kiro (`.kiro/agents/`), OpenCode (`.opencode/agents/`), and Codex (`.codex/agents/`) copies, so every supported tool gets them.
 
 | Agent | Tier | Backs | What it does |
 |---|---|---|---|
@@ -276,9 +333,9 @@ To install, run `sh hooks/install.sh`, which points `core.hooksPath` at `hooks/`
 
 - [`GLOSSARY.md`](GLOSSARY.md) defines the words this repo uses in a specific way: slot, dispatcher, watcher, hunting, ci-speed, flake, token bleed. Read it first if the lane names look interchangeable, because they are not.
 - [`MODEL-DEFAULTS.md`](MODEL-DEFAULTS.md) covers which model each task uses, per platform, and how to save tokens.
-- [`CLAUDE.md`](CLAUDE.md) and [`AGENTS.md`](AGENTS.md) cover the conventions, the model policy, and how the five tools stay in sync.
+- [`CLAUDE.md`](CLAUDE.md) and [`AGENTS.md`](AGENTS.md) cover the conventions, the model policy, and how the six tools stay in sync.
 - [`.claude/skills/`](.claude/skills) holds every skill. The pointer skills list their own install steps.
-- To edit a command or agent, change it in `.claude/commands/` or `.claude/agents/`, then run `make sync` to regenerate the Cursor, Copilot, Kiro, and OpenCode copies.
+- To edit a command or agent, change it in `.claude/commands/` or `.claude/agents/`, then run `make sync` to regenerate the Cursor, Copilot, Kiro, OpenCode, and Codex copies.
 - [`CONTRIBUTING.md`](CONTRIBUTING.md) explains how to add skills, commands, and agents, and the sync rule that keeps the mirrors honest. [`SECURITY.md`](SECURITY.md) explains how to report a security issue.
 
 ## License

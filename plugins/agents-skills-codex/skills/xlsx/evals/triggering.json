@@ -1,0 +1,123 @@
+[
+  {
+    "query": "Open q3-budget.xlsx, add a variance column comparing actual against forecast, and conditional-format anything over 10% off in red.",
+    "should_trigger": true,
+    "expected": "xlsx",
+    "note": "Editing a named .xlsx — new column, formula, formatting."
+  },
+  {
+    "query": "The spreadsheet in my downloads — the vendor list one — dedupe it by tax ID, sort by total spend descending, and freeze the header row.",
+    "should_trigger": true,
+    "expected": "xlsx",
+    "note": "Casual, unpathed reference to a spreadsheet file; the description says trigger especially in this case."
+  },
+  {
+    "query": "sales-export.csv is a mess: headers start on row 6, there are blank separator rows every 20 lines, and the amounts have currency symbols in them. Turn it into a proper .xlsx with real numeric columns.",
+    "should_trigger": true,
+    "expected": "xlsx",
+    "note": "Cleaning messy tabular data into a proper spreadsheet — explicitly in scope."
+  },
+  {
+    "query": "Build me a 3-year loan amortization schedule where the rate, principal, and term are input cells at the top so I can change them and watch the payment update.",
+    "should_trigger": true,
+    "expected": "xlsx",
+    "note": "New spreadsheet from scratch with live formulas; 'input cells that update' means a workbook, not a script."
+  },
+  {
+    "query": "Add a stacked bar chart of monthly revenue by region to the Summary tab of the workbook, sourced from the Data sheet.",
+    "should_trigger": true,
+    "expected": "xlsx",
+    "note": "Charting inside an existing workbook."
+  },
+  {
+    "query": "Fix the #REF! errors on the Data sheet of forecast-model.xlsm — I think someone deleted a column the pivot source was pointing at.",
+    "should_trigger": true,
+    "expected": "xlsx",
+    "note": ".xlsm repair; formula errors are a named trigger."
+  },
+  {
+    "query": "Merge the twelve monthly CSV exports into one spreadsheet, add a Month column derived from each filename, and drop the duplicated header rows.",
+    "should_trigger": true,
+    "expected": "xlsx",
+    "note": "Consolidating CSVs into a single spreadsheet deliverable."
+  },
+  {
+    "query": "Read headcount.xlsx and tell me which departments are already over their approved budget and by how much.",
+    "should_trigger": true,
+    "expected": "xlsx",
+    "note": "Spreadsheet is the primary input even though the answer comes back as prose — 'open, read' is in scope."
+  },
+  {
+    "query": "Here's the JSON from the orders endpoint. Give me a spreadsheet with one row per order and columns for id, status, placed_at, and total.",
+    "should_trigger": true,
+    "expected": "xlsx",
+    "note": "Creating a spreadsheet from a non-tabular source; the deliverable is the spreadsheet."
+  },
+  {
+    "query": "Convert this tab-separated dump to CSV, and while you're in there normalize the date column to ISO 8601.",
+    "should_trigger": true,
+    "expected": "xlsx",
+    "note": "Converting between tabular file formats — named in the description."
+  },
+
+  {
+    "query": "Turn q3-budget.xlsx into a slide deck for the leadership review, one slide per cost center.",
+    "should_trigger": false,
+    "expected": "pptx",
+    "note": "Near-miss: the spreadsheet is the input, but the deliverable is a presentation. The output format decides."
+  },
+  {
+    "query": "Take the figures from the budget sheet and write them up as a board memo in Word — narrative, not a table dump.",
+    "should_trigger": false,
+    "expected": "docx",
+    "note": "Near-miss: spreadsheet input, Word deliverable, which the description explicitly excludes."
+  },
+  {
+    "query": "Extract the tables out of the annual report PDF and just tell me what the revenue line and the operating margin were.",
+    "should_trigger": false,
+    "expected": "pdf",
+    "note": "Near-miss: tabular data inside a PDF, but nothing is written to a spreadsheet — a read-only PDF extraction."
+  },
+  {
+    "query": "Build a nightly ETL job that loads our vendor CSV drops into Postgres, dedupes on order_id, and alerts on schema drift.",
+    "should_trigger": false,
+    "expected": null,
+    "note": "Near-miss: CSVs everywhere, but the deliverable is a database pipeline — explicitly excluded."
+  },
+  {
+    "query": "Write a standalone Python script that reads these CSVs, computes per-region totals, and prints a summary table to stdout.",
+    "should_trigger": false,
+    "expected": null,
+    "note": "Near-miss: tabular data, but the deliverable is a script, which the description excludes."
+  },
+  {
+    "query": "Wire up the Google Sheets API so the app can append a row to the tracking sheet every time a deal closes.",
+    "should_trigger": false,
+    "expected": null,
+    "note": "Near-miss: a spreadsheet is involved, but it's a Google Sheets API integration — explicitly excluded."
+  },
+  {
+    "query": "Make an interactive HTML dashboard from this data with a revenue chart, a region breakdown, and KPI tiles.",
+    "should_trigger": false,
+    "expected": null,
+    "note": "Near-miss: charting over tabular data, but the deliverable is an HTML report, which the description excludes."
+  },
+  {
+    "query": "Our CSV upload endpoint chokes on files that have a UTF-8 BOM on the header line. Fix the parser and add a regression test.",
+    "should_trigger": false,
+    "expected": null,
+    "note": "Near-miss: CSV parsing, but this is a code bug in application source, not a spreadsheet the user wants worked on."
+  },
+  {
+    "query": "Summarize the numbers on the third slide of the deck — I think that's the one with the cohort retention table.",
+    "should_trigger": false,
+    "expected": "pptx",
+    "note": "Near-miss: a table is the subject, but it lives in a presentation file."
+  },
+  {
+    "query": "Add a pandas DataFrame fixture to the test suite so we can assert the aggregation logic without hitting the warehouse.",
+    "should_trigger": false,
+    "expected": null,
+    "note": "Near-miss: tabular data in code, but no spreadsheet file is read or produced."
+  }
+]

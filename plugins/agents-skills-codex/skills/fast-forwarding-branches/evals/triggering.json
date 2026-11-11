@@ -1,0 +1,21 @@
+[
+  {"query": "Keep my main checkout up to date with origin every 10 minutes.", "should_trigger": true, "expected": "fast-forwarding-branches", "note": "The core lane: an interval-driven pull --ff-only of the primary checkout."},
+  {"query": "Start the branch-ff lane.", "should_trigger": true, "expected": "fast-forwarding-branches", "note": "Named invocation of the agent this skill backs."},
+  {"query": "git pull says 'Your local changes to the following files would be overwritten by merge' — what do I do?", "should_trigger": true, "expected": "fast-forwarding-branches", "note": "The blocked-fast-forward case this skill owns; the answer is alert, never clobber."},
+  {"query": "My pull failed with 'fatal: Not possible to fast-forward, aborting.'", "should_trigger": true, "expected": "fast-forwarding-branches", "note": "The diverged-primary row of the decision table."},
+  {"query": "The worktrees agents cut keep starting from an old base — the hooks and scripts are stale.", "should_trigger": true, "expected": "fast-forwarding-branches", "note": "The exact problem this lane exists to prevent: a stale primary poisons every new worktree."},
+  {"query": "Set up a loop that fast-forwards the local integration branch and alerts me if it can't.", "should_trigger": true, "expected": "fast-forwarding-branches", "note": "Describes the lane end to end without naming it."},
+  {"query": "Is it safe to just run git pull on the primary checkout automatically?", "should_trigger": true, "expected": "fast-forwarding-branches", "note": "This skill's answer: only --ff-only, never a bare pull, and never resolve a refusal."},
+  {"query": "Something left uncommitted changes in my main clone and now it won't sync.", "should_trigger": true, "expected": "fast-forwarding-branches", "note": "A dirty primary blocking the fast-forward — alert and stop, do not stash."},
+  {"query": "Keep the local repo current on an interval but never touch my worktrees.", "should_trigger": true, "expected": "fast-forwarding-branches", "note": "Scope rule: the primary checkout only, worktrees are off limits."},
+
+  {"query": "My PR is green but won't merge — why?", "should_trigger": false, "expected": "driving-prs-to-merge", "note": "Post-open PR lifecycle, not local branch syncing."},
+  {"query": "Rebase my feature branch onto main and force-push it.", "should_trigger": false, "expected": null, "note": "This lane never rebases or force-pushes anything; it is fast-forward only."},
+  {"query": "Resolve the merge conflict on my branch.", "should_trigger": false, "expected": null, "note": "This skill explicitly never resolves conflicts — it alerts and stops."},
+  {"query": "Delete the local branches whose PRs already merged.", "should_trigger": false, "expected": "pr-cleanup", "note": "Post-merge branch/worktree cleanup is the pr-cleanup lane."},
+  {"query": "CI is taking 50 minutes — speed it up.", "should_trigger": false, "expected": "ci-speed-hunting", "note": "CI latency lane, unrelated to local checkout syncing."},
+  {"query": "A test passes on retry but reds the merge queue intermittently.", "should_trigger": false, "expected": "ci-flake-hunting", "note": "Flake hunting, not branch fast-forwarding."},
+  {"query": "Create a worktree for me to work in.", "should_trigger": false, "expected": null, "note": "Worktree creation is not this lane; it only reads the primary and never touches worktrees."},
+  {"query": "Push my commits to main.", "should_trigger": false, "expected": null, "note": "This lane only pulls; it never pushes."},
+  {"query": "Why did auto-merge get dropped on PR #412?", "should_trigger": false, "expected": "pr-checks", "note": "Merge-queue/auto-merge health is the pr-checks lane."}
+]

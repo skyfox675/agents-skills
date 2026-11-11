@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Expose the canonical Claude skills to Kiro and OpenCode.
+"""Expose the canonical Claude skills to Kiro, OpenCode, and Codex.
 
-Claude, Kiro, and OpenCode all read the same Anthropic Agent Skills format — a
+Claude, Kiro, OpenCode, and Codex all read the same Agent Skills format — a
 per-skill directory holding a `SKILL.md` with `name` + `description` frontmatter —
 but each looks in its own directory. The format is byte-identical, so rather than
 fork copies (which drift and bloat the repo) we symlink each platform's skills dir
@@ -9,8 +9,10 @@ at the canonical one. One source of truth:
 
   .kiro/skills      -> ../.claude/skills
   .opencode/skills  -> ../.claude/skills
+  .agents/skills    -> ../.claude/skills   (Codex CLI/IDE and the ChatGPT desktop app)
 
-(Cursor and Copilot read `.claude/skills` directly, so they need no link.)
+(Cursor and Copilot read `.claude/skills` directly, so they need no link. Codex
+follows a symlinked skills folder to its target.)
 
   python3 scripts/sync-skills.py          # create/repair the symlinks
   python3 scripts/sync-skills.py --check  # exit 1 if a link is missing or wrong
@@ -23,6 +25,7 @@ CANONICAL = os.path.join(".claude", "skills")
 LINKS = {
     os.path.join(".kiro", "skills"): os.path.join("..", ".claude", "skills"),
     os.path.join(".opencode", "skills"): os.path.join("..", ".claude", "skills"),
+    os.path.join(".agents", "skills"): os.path.join("..", ".claude", "skills"),
 }
 
 
@@ -56,7 +59,7 @@ def main():
             sys.exit(1)
         print(f"skill links in sync ({len(LINKS)} platforms)")
     else:
-        print("linked skills -> .kiro/skills + .opencode/skills")
+        print("linked skills -> .kiro/skills + .opencode/skills + .agents/skills")
 
 
 if __name__ == "__main__":

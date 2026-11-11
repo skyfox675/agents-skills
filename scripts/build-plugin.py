@@ -5,25 +5,30 @@ This repo doubles as its own plugin marketplace for two ecosystems:
 
   plugins/agents-skills/         Claude Code   (.claude-plugin/plugin.json)
   plugins/agents-skills-cursor/  Cursor        (.cursor-plugin/plugin.json)
+  plugins/agents-skills-codex/   Codex/ChatGPT (plugin.json at the plugin root)
 
-Both take the same skills, because the Agent Skills format is identical. Agents and
+All take the same skills, because the Agent Skills format is identical. Agents and
 commands differ per tool, so each payload pulls from that tool's generated mirror:
 
   payload            skills            agents            commands
   Claude             .claude/skills    .claude/agents    .claude/commands
   Cursor             .claude/skills    .cursor/agents    .cursor/commands
+  Codex              .claude/skills    -                 -
+
+Codex plugins carry skills, MCP servers, hooks and apps, but not agents or commands,
+so the Codex payload is skills only. Its agents ship as .codex/agents/ instead.
 
 The mirrors are produced by sync-agents.py and sync-commands.py, so run those first
 (the Makefile's `sync` target already orders them ahead of this script).
 
 Payloads are real files, never symlinks: each tool installs the plugin directory on
 its own, and a link escaping that directory would dangle. The payload dirs are wiped
-and rebuilt so deletions and renames propagate. The two plugin manifests are hand
+and rebuilt so deletions and renames propagate. The three plugin manifests are hand
 maintained and version stamped by scripts/set-version.py; this script never touches
 them.
 
-  python3 scripts/build-plugin.py          # rebuild both payloads
-  python3 scripts/build-plugin.py --check  # exit 1 if either is out of date
+  python3 scripts/build-plugin.py          # rebuild every payload
+  python3 scripts/build-plugin.py --check  # exit 1 if any is out of date
 """
 import filecmp, os, shutil, sys
 
@@ -40,6 +45,9 @@ PLUGINS = {
         "skills": (".claude/skills", "skill-dirs"),
         "agents": (".cursor/agents", "md-files"),
         "commands": (".cursor/commands", "md-files"),
+    },
+    "agents-skills-codex": {
+        "skills": (".claude/skills", "skill-dirs"),
     },
 }
 

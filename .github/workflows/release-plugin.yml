@@ -1,7 +1,7 @@
 name: Release plugin
 
-# Packages the canonical .claude skills/agents/commands into the Claude plugin under
-# plugins/agents-skills, then tags and publishes a GitHub Release.
+# Packages the canonical .claude skills/agents/commands into the Claude, Cursor, and
+# Codex/ChatGPT plugins under plugins/, then tags and publishes a GitHub Release.
 #
 # Versions are CalVer with a patch counter — YYYY.M.D.N — so multiple releases in one
 # day never collide (`.0` is the first of the day). Tags are `v<version>`.
@@ -50,7 +50,7 @@ jobs:
       - name: Detect changes
         id: diff
         run: |
-          git add -A plugins .claude-plugin .cursor-plugin
+          git add -A plugins .claude-plugin .cursor-plugin .agents/plugins
           if git diff --cached --quiet; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
             echo "Plugin payload unchanged; nothing to release."
@@ -110,10 +110,11 @@ jobs:
         run: |
           shopt -s nullglob
           mkdir -p dist/skills
-          # One zip per plugin: Claude Code and Cursor.
+          # One zip per plugin: Claude Code, Cursor, and Codex/ChatGPT.
           (cd plugins && zip -qr "$GITHUB_WORKSPACE/dist/agents-skills-plugin.zip" agents-skills)
           (cd plugins && zip -qr "$GITHUB_WORKSPACE/dist/agents-skills-cursor-plugin.zip" agents-skills-cursor)
-          # One zip per skill, for Claude Desktop upload.
+          (cd plugins && zip -qr "$GITHUB_WORKSPACE/dist/agents-skills-codex-plugin.zip" agents-skills-codex)
+          # One zip per skill, for Claude Desktop and ChatGPT skill upload.
           cd plugins/agents-skills/skills
           for d in */; do
             d="${d%/}"
@@ -132,4 +133,5 @@ jobs:
             --notes-file dist/notes.md \
             dist/agents-skills-plugin.zip \
             dist/agents-skills-cursor-plugin.zip \
+            dist/agents-skills-codex-plugin.zip \
             dist/skills/*.zip
